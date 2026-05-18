@@ -1,7 +1,7 @@
 use std::path::PathBuf; // for path to a file
 use clap::Parser;
 use debtlint::in_out::read_corpus; // for read the file
-use debtlint::tokenizer::{count_pairs, most_common_pair, text_to_sequence, Token};
+use debtlint::tokenizer::{text_to_sequence, train_bpe, BASE_VOCAB_SIZE};
 
 #[derive(Parser, Debug)]
 #[command( // binary data to the user
@@ -29,25 +29,23 @@ fn main() {
         }
     };
 
-    let sequence: Vec<Token> = text_to_sequence(&corpus); // convert the text to a sequence of token
+    let initial_tokens: usize = text_to_sequence(&corpus).len(); // convert the text to a sequence of token and return the length of the sequence
+    let result = train_bpe(text_to_sequence(&corpus), args.vocab_size, args.min_frequency); // train the BPE and return the result
+    let compression = if initial_tokens > 0 {
+        (1.0 - result.sequence.len() as f64 / initial_tokens as f64) * 100.0 // return the compression ratio
+    } else {
+        0.0 // if the initial tokens is 0 return 0
+    };
 
     println!("corpus: {}", args.file.display());
     println!("characters: {}", corpus.chars().count());
     println!("bytes: {}", corpus.len());
-    println!("initial tokens: {}", sequence.len());
+    println!("initial tokens: {initial_tokens}");
+    println!("encoded tokens: {}", result.sequence.len());
+    println!("compression ratio: {compression:.1}%");
     println!("target vocab size: {}", args.vocab_size);
     println!("min pair frequency: {}", args.min_frequency);
-
-    let pair_counts = count_pairs(&sequence);
-    println!("distinct pairs: {}", pair_counts.len());
-    match most_common_pair(&pair_counts) {
-        Some(((left, right), frequency)) => {
-            println!("top pair: ({left}, {right})");
-            println!("top pair frequency: {frequency}");
-            if frequency < args.min_frequency {
-                println!("top pair below min frequency —>  no merge would start");
-            }
-        }
-        None => println!("no adjacent pairs in sequence"),
-    }
+    println!("merges performed: {}", result.merges);
+    println!("vocabulary size: {} ({} base + {} merged)",
+        BASE_VOCAB_SIZE + result.merges, BASE_VOCAB_SIZE, result.merges);
 }
