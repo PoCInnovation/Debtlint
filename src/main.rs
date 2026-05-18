@@ -1,8 +1,7 @@
 use std::path::PathBuf; // for path to a file
 use clap::Parser;
 use debtlint::in_out::read_corpus; // for read the file
-use debtlint::tokenizer::text_to_sequence; // for convert the text to a sequence
-use debtlint::tokenizer::Token; // for token
+use debtlint::tokenizer::{count_pairs, most_common_pair, text_to_sequence, Token};
 
 #[derive(Parser, Debug)]
 #[command( // binary data to the user
@@ -31,4 +30,24 @@ fn main() {
     };
 
     let sequence: Vec<Token> = text_to_sequence(&corpus); // convert the text to a sequence of token
+
+    println!("corpus: {}", args.file.display());
+    println!("characters: {}", corpus.chars().count());
+    println!("bytes: {}", corpus.len());
+    println!("initial tokens: {}", sequence.len());
+    println!("target vocab size: {}", args.vocab_size);
+    println!("min pair frequency: {}", args.min_frequency);
+
+    let pair_counts = count_pairs(&sequence);
+    println!("distinct pairs: {}", pair_counts.len());
+    match most_common_pair(&pair_counts) {
+        Some(((left, right), frequency)) => {
+            println!("top pair: ({left}, {right})");
+            println!("top pair frequency: {frequency}");
+            if frequency < args.min_frequency {
+                println!("top pair below min frequency —>  no merge would start");
+            }
+        }
+        None => println!("no adjacent pairs in sequence"),
+    }
 }
