@@ -1,5 +1,8 @@
 use std::path::PathBuf; // for path to a file
 use clap::Parser;
+use debtlint::in_out::read_corpus; // for read the file
+use debtlint::tokenizer::text_to_sequence; // for convert the text to a sequence
+use debtlint::tokenizer::Token; // for token
 
 #[derive(Parser, Debug)]
 #[command( // binary data to the user
@@ -17,9 +20,15 @@ struct Args { // struct to recup user input
 }
 
 fn main() {
-    let args = Args::parse();
+    let args: Args = Args::parse(); // fill Args
 
-    for _ in 0..args.vocab_size {
-        println!("Hello !");
-    }
+    let corpus: String = match read_corpus(&args.file) { // read the file
+        Ok(content) => content, // if the file is readed return the content
+        Err(err) => { // else error
+            eprintln!("failed to read {}: {err}", args.file.display());
+            std::process::exit(1); // exit the program with code 1 (clean !)
+        }
+    };
+
+    let sequence: Vec<Token> = text_to_sequence(&corpus); // convert the text to a sequence of token
 }

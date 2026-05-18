@@ -1,4 +1,4 @@
-mod sequence; // import sequence -> 
+mod sequence; // import sequence ->
 mod vocabulary; // import vocabulary
 
 pub use sequence::text_to_sequence;
