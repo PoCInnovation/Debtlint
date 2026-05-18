@@ -1,7 +1,7 @@
 use std::path::PathBuf; // for path to a file
 use clap::Parser;
 use debtlint::in_out::read_corpus; // for read the file
-use debtlint::tokenizer::{text_to_sequence, train_bpe, BASE_VOCAB_SIZE};
+use debtlint::tokenizer::{decode_sequence, text_to_sequence, train_bpe, BASE_VOCAB_SIZE};
 
 #[derive(Parser, Debug)]
 #[command( // binary data to the user
@@ -46,6 +46,15 @@ fn main() {
     println!("target vocab size: {}", args.vocab_size);
     println!("min pair frequency: {}", args.min_frequency);
     println!("merges performed: {}", result.merges);
-    println!("vocabulary size: {} ({} base + {} merged)",
-        BASE_VOCAB_SIZE + result.merges, BASE_VOCAB_SIZE, result.merges);
+    println!(
+        "vocabulary size: {} ({} base + {} merged)",
+        BASE_VOCAB_SIZE + result.merges,
+        BASE_VOCAB_SIZE,
+        result.merges
+    );
+
+    let decoded = decode_sequence(&result.sequence, &result.vocabulary);
+    let equal = decoded == corpus;
+    println!("decoded bytes: {}", decoded.len());
+    println!("decoded == corpus ok: {equal}");
 }
