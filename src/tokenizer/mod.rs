@@ -1,9 +1,11 @@
+mod decode;
 mod pairs;
 mod replace;
 mod sequence;
 mod train;
 mod vocabulary;
 
+pub use decode::{decode_sequence, decode_token};
 pub use pairs::{count_pairs, most_common_pair, TokenPair};
 pub use replace::replace_pair;
 pub use sequence::text_to_sequence;
