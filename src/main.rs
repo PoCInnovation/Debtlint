@@ -16,28 +16,48 @@ struct Args {
     size: usize
 }
 
+fn merge_same<T: PartialEq + Clone>(vec: &mut Vec<T>, a: &T, b: &T, merged: T)
+{
+    let mut i = 0;
+
+    while i < (vec.len() - 1) {
+        if vec[i] == *a && vec[i + 1] == *b {
+            vec[i] = merged.clone();
+            vec.remove(i + 1);
+        } else {
+            i += 1;
+        }
+    }
+}
+
 fn byte_pair_encoding(string: String, size: usize)
 {
-    let mut vocabulary: Vec<String> = string.chars().map(|c| c.to_string()).collect();
+    let mut vocabulary: HashMap<usize, String> = HashMap::new();
+    let mut encoded: Vec<String> = string.chars().map(|c| c.to_string()).collect();
     let mut best_pair: HashMap<(String, String), u32> = HashMap::new();
 
     while vocabulary.len() < size {
-        for (index, element) in vocabulary.iter().enumerate() {
-            let key: (String, String) = (element.to_string(), vocabulary[index + 1].to_string()).clone();
-            if best_pair.contains_key(&key) {
-                match best_pair.get_mut(&key) {
-                    Some(x) => { *x += 1; }
-                    None => {}
-                }
+        best_pair.clear();
+        for (index, element) in encoded.iter().enumerate() {
+            if index + 1 >= encoded.len() {
+                continue;
             }
+            let key = (element.to_string(), encoded[index + 1].to_string());
+            *best_pair.entry(key).or_insert(0) += 1;
         }
         let max_entry = best_pair.iter().max_by_key(|&(_, value)| value);
         match max_entry {
-            Some((key, value)) => { vocabulary.push(key.0.clone() + &key.1.clone()); },
+            Some((key, _)) => {
+                let merged = key.0.clone() + &key.1;
+                merge_same(&mut encoded, &key.0, &key.1, merged.clone());
+                if !vocabulary.values().any(|v| v == &merged) {
+                    vocabulary.insert(vocabulary.len() + 1, merged);
+                }
+            },
             None => break,
         }
-        //merge les 2 key dans le vecteur de string
     }
+    println!("{:?}", vocabulary);
 }
 
 fn main() {
