@@ -2,21 +2,22 @@ use std::collections::HashMap;
 
 use crate::tokenizer::{Token, VocabularyEntry, BASE_VOCAB_SIZE};
 
+const BASE_LETTERS: &[u8] = b"abcdefghijklmnopqrstuvwxyz"; // base letters for the token before vector
+
 pub fn decode_token(token: Token, vocabulary: &HashMap<Token, VocabularyEntry>) -> Vec<u8> {
-    if token < BASE_VOCAB_SIZE { // if the token is less than 256 return the token as a vector of u8
-        return vec![token as u8];
+    if token < BASE_VOCAB_SIZE { // if the token is less than 26 return the letter as a vector of u8
+        let index = token as usize;
+        return vec![BASE_LETTERS[index]]; // return the letter
     }
-    let entry = match vocabulary.get(&token) {
-        Some(entry) => entry,
-        None => {
-            eprintln!("unknown token id: {token}");
-            return Vec::new();
-        }
+    let Some((left, right)) = vocabulary.get(&token).and_then(VocabularyEntry::pair) // return the pair of the token
+    else {
+        eprintln!("unknown token id: {token}");
+        return Vec::new();
     };
-    let mut bytes: Vec<u8> = Vec::new(); // create the vector of u8
-    bytes.extend(decode_token(entry.left, vocabulary)); // decode the left token
-    bytes.extend(decode_token(entry.right, vocabulary)); // decode the right token
-    bytes // return the vector of u8
+    let mut bytes = Vec::new();
+    bytes.extend(decode_token(left, vocabulary)); // decode the left token
+    bytes.extend(decode_token(right, vocabulary)); // decode the right token
+    bytes
 }
 
 pub fn decode_sequence(sequence: &[Token], vocabulary: &HashMap<Token, VocabularyEntry>) -> String {
