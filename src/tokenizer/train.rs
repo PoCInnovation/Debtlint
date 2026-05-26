@@ -23,8 +23,8 @@ pub fn train_bpe(mut sequence: Vec<Token>, target_vocab_size: u32,
         if frequency < min_frequency {
             break;
         }
-        vocabulary.insert(next_id, VocabularyEntry::new(pair.0, pair.1));
-        sequence = replace_pair(&sequence, pair, next_id);
+        vocabulary.insert(next_id, VocabularyEntry::merge(pair, vec![])); // merge the pair and vector of occurrences
+        sequence = replace_pair(&sequence, pair, next_id); // replace the pair with the new token
         next_id += 1;
     }
     BpeTrainingResult {
