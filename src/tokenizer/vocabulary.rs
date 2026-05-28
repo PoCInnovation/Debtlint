@@ -1,7 +1,8 @@
+use std::path::PathBuf;
+
 use crate::tokenizer::pairs::TokenPair;
 
 pub type Token = u32;
-pub type FileId = u32;
 
 /// fixe alphabet a -> 0 & z -> 25, real first id is 26
 pub const BASE_VOCAB_SIZE: u32 = 26;
@@ -9,15 +10,15 @@ pub const BASE_VOCAB_SIZE: u32 = 26;
 const BASE_LETTERS: &[u8] = b"abcdefghijklmnopqrstuvwxyz"; // b -> byte / str to utf-8
 
 pub struct FileOccurrences {
-    pub file_id: FileId,
+    pub path: PathBuf,
     pub offsets: Vec<usize>, // vector of offsets all the occurences of a token in a single file
 }
 
 // function to manage the file occurrences
 impl FileOccurrences {
-    pub fn new(file_id: FileId) -> Self {
+    pub fn new(path: PathBuf) -> Self {
         Self {
-            file_id,
+            path,
             offsets: Vec::new(),
         }
     }
@@ -38,7 +39,7 @@ pub enum VocabularyEntry { // enum to manage the vocabulary entry, not struct bc
 // function to manage the vocabulary entry
 impl VocabularyEntry {
     pub const fn letter(byte: u8) -> Self {
-        Self::Letter(byte) // getter for the letter
+        Self::Letter(byte) // return the letter entry
     }
 
     pub fn merge(pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Self {
@@ -55,9 +56,9 @@ impl VocabularyEntry {
         }
     }
 
-    pub fn occurrences(&self) -> &[FileOccurrences] { // getter for the occurrences
+    pub fn occurrences(&self) -> &[FileOccurrences] { // getter for the occurrence
         match self {
-            Self::Letter(_) => &[], // empty vector
+            Self::Letter(_) => &[], // empty slice
             Self::Merge { occurrences, .. } => occurrences, // if the entry is a existing pair return the occurrences
         }
     }

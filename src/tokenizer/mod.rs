@@ -13,5 +13,5 @@ pub use sequence::text_to_sequence;
 pub use source::SourceFile;
 pub use train::{train_bpe, BpeTrainingResult};
 pub use vocabulary::{
-    FileId, FileOccurrences, Token, Vocabulary, VocabularyEntry, BASE_VOCAB_SIZE,
+    FileOccurrences, Token, Vocabulary, VocabularyEntry, BASE_VOCAB_SIZE,
 };
