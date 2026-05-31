@@ -6,9 +6,9 @@ pub struct SourceFile {
     pub path: PathBuf,
     pub content: String,
 }
-
 const CODE_EXTENSIONS: [&str; 13] = ["py", "js", "rs", "c", "cpp", "go", "java", "php", "lua", "ts", "rb", "jsx", "tsx"];
 const COMMENT_CHARS: [&str; 2] = ["#", "//"];
+
 
 fn get_file(path: &str) -> Option<SourceFile>
 {
@@ -18,6 +18,8 @@ fn get_file(path: &str) -> Option<SourceFile>
     let mut content = String::from("");
     for l in reader.lines(){
         let line = l.ok()?;
+
+        if COMMENT_CHARS.iter().any(|c| line.trim().starts_with(c)){continue};
         let normalized = line.split_whitespace().collect::<Vec<_>>().join(" ");
         content += &normalized;
     }
