@@ -34,11 +34,11 @@ The `publish.yml` workflow will:
 
 The tag must follow the crate version format:
 
-```bash git tag -a vX.Y.Z -m "[DESCRIPTION]" ```
+``` git tag -a vX.Y.Z -m "[DESCRIPTION]" ```
 
 ### 2. Push the tag to GitHub
 
-```bash git push --tags ```
+``` git push --tags ```
 
 ---
 
