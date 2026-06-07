@@ -7,8 +7,7 @@ description = "Test of CI for debtlint crate"
 repository = "https://github.com/PoCInnovation/Debtlint.git"
 readme = "README.md"
 license = "Apache-2.0"
-license-file = "LICENSE"
-keywords = ["CLI", "code-analysis", "technical-debt", "duplication", "bpe", "refactoring", "linter"]
+keywords = ["CLI", "code-analysis", "technical-debt", "duplication", "linter"]
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
