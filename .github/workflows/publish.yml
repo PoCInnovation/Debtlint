@@ -12,7 +12,9 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Install rust
-              run: curl https://sh.rustup.rs -sSf -y | sh
+              run: |
+                curl https://sh.rustup.rs -sSf -y | sh
+                cargo install cargo-release
 
             - name: Update package version
               run: cargo set-version ${GITHUB_REF_NAME#v}
