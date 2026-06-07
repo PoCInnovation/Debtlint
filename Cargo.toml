@@ -1,6 +1,6 @@
 [package]
 name = "test-debtlint"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2024"
 authors = ["POC"]
 description = "Test of CI for debtlint crate"
