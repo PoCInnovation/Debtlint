@@ -18,7 +18,7 @@ jobs:
               run: curl https://sh.rustup.rs -sSf -y | sh
 
             - name: Update package version
-              run: cargo set-version ${ env.NEW_VERSION#v }
+              run: cargo set-version ${env.NEW_VERSION#v}
             
             - name: Publish package
               run: |
