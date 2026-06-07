@@ -22,9 +22,10 @@ jobs:
                 git config user.name "github-actions[bot]"
                 git config user.email "github-actions[bot]@users.noreply.github.com"
                 git add Cargo.toml Cargo.lock
-                git commit -m "Update version to ${GITHUB_REF_NAME}"
+                git commit -m "Update version to ${GITHUB_REF_NAME}."
+                git push -f origin main
 
             - name: Publish package
               run: |
                 echo ${{ secrets.CARGO_REGISTRY_TOKEN }} | cargo login
-                cargo publish --allow-dirty
+                cargo publish
