@@ -15,7 +15,7 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Install rust
-              run: curl https://sh.rustup.rs -sSf | sh -y
+              run: curl https://sh.rustup.rs -sSf -y | sh
 
             - name: Update package version
               run: cargo set-version ${ env.NEW_VERSION#v }
