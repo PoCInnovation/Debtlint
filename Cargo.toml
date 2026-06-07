@@ -1,7 +1,14 @@
 [package]
-name = "debtlint"
-version = "0.1.0"
+name = "test-debtlint"
+version = "1.0.0"
 edition = "2024"
+authors = ["POC"]
+description = "Test of CI for debtlint crate"
+repository = "https://github.com/PoCInnovation/Debtlint.git"
+readme = "README.md"
+license = "Apache-2.0"
+license-file = "LICENSE"
+keywords = ["CLI", "code-analysis", "technical-debt", "duplication", "bpe", "refactoring", "linter"]
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }

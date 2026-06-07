@@ -1,0 +1,26 @@
+name: Publish crate
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+env:
+    NEW_VERSION: ${{ github.ref_name }}
+
+jobs:
+    update_package_version:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Install rust
+              run: curl https://sh.rustup.rs -sSf | sh
+
+            - name: Update package version
+              run: cargo set-version ${ env.NEW_VERSION#v }
+            
+            - name: Publish package
+              run: |
+                cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
+                cargo publish
