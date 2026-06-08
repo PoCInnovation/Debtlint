@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::tokenizer::pairs::{count_pairs_corpus, most_common_pair};
-use crate::tokenizer::replace::replace_pair;
+use crate::tokenizer::replace::{find_pair_occurrences, replace_pair};
 use crate::tokenizer::sequence::text_to_sequence;
 use crate::tokenizer::SourceFile;
 use crate::tokenizer::{Token, Vocabulary, BASE_VOCAB_SIZE};
@@ -55,7 +55,8 @@ fn train_from_sequences(mut file_sequences: Vec<(PathBuf, Vec<Token>)>, target_v
         if frequency < min_frequency {
             break;
         }
-        let new_token = vocabulary.push_merge(pair, vec![]); // push the merge to the vocabulary
+        let occurrences = find_pair_occurrences(&file_sequences, pair); // find the occurrences of the pair in the file sequences
+        let new_token = vocabulary.push_merge(pair, occurrences); // push the merge to the vocabulary
         for (_, sequence) in &mut file_sequences {
             *sequence = replace_pair(sequence, pair, new_token); // replace the pair with the new token
         }
