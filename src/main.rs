@@ -1,10 +1,10 @@
 use std::path::PathBuf; // for path to a file
 use clap::Parser;
 use debtlint::in_out::read_corpus; // for read the file
-use debtlint::tokenizer::{decode_sequence, text_to_sequence, train_bpe, BASE_VOCAB_SIZE};
+use debtlint::tokenizer::{decode_sequence, train_corpus, SourceFile, BASE_VOCAB_SIZE};
 
 #[derive(Parser, Debug)]
-#[command( // binary data to the user
+#[command(
     name = "debtlint",
     version,
     about = "Technical debt detection via BPE-inspired pattern analysis"
@@ -21,41 +21,50 @@ struct Args { // struct to recup user input
 fn main() {
     let args: Args = Args::parse(); // fill Args
 
-    let corpus: String = match read_corpus(&args.file) { // read the file
-        Ok(content) => content, // if the file is readed return the content
-        Err(err) => { // else error
+    let content = match read_corpus(&args.file) {
+        Ok(content) => content,
+        Err(err) => {
             eprintln!("failed to read {}: {err}", args.file.display());
-            std::process::exit(1); // exit the program with code 1 (clean !)
+            std::process::exit(1);
         }
     };
 
-    let input_tokens = text_to_sequence(&corpus); // convert the text to a sequence of token
-    let initial_tokens = input_tokens.len();
-    let result = train_bpe(input_tokens, args.vocab_size, args.min_frequency);
+    let files = vec![SourceFile {
+        path: args.file.clone(),
+        content: content.clone(),
+    }];
+
+    let result = train_corpus(&files, args.vocab_size, args.min_frequency);
+    let initial_tokens = result.initial_token_count;
+    let encoded_tokens = result.encoded_token_count();
     let compression = if initial_tokens > 0 {
-        (1.0 - result.sequence.len() as f64 / initial_tokens as f64) * 100.0
+        (1.0 - encoded_tokens as f64 / initial_tokens as f64) * 100.0
     } else {
         0.0
     };
 
-    println!("corpus: {}", args.file.display());
-    println!("characters: {}", corpus.chars().count());
-    println!("bytes: {}", corpus.len());
+    println!("source files: {}", result.files.len());
+    println!("characters: {}", content.chars().count());
+    println!("bytes: {}", content.len());
     println!("initial tokens: {initial_tokens}");
-    println!("encoded tokens: {}", result.sequence.len());
+    println!("encoded tokens: {encoded_tokens}");
     println!("compression ratio: {compression:.1}%");
     println!("target vocab size: {}", args.vocab_size);
     println!("min pair frequency: {}", args.min_frequency);
     println!("merges performed: {}", result.merges);
     println!(
         "vocabulary size: {} ({} base + {} merged)",
-        BASE_VOCAB_SIZE + result.merges,
+        result.vocabulary.len(),
         BASE_VOCAB_SIZE,
         result.merges
     );
 
-    let decoded = decode_sequence(&result.sequence, &result.vocabulary);
-    let equal = decoded == corpus;
-    println!("decoded bytes: {}", decoded.len());
-    println!("decoded == corpus ok: {equal}");
+    let mut decode_ok = true;
+    for (source, trained) in files.iter().zip(result.files.iter()) {
+        let decoded = decode_sequence(&trained.sequence, &result.vocabulary);
+        let equal = decoded == source.content;
+        decode_ok &= equal;
+        println!("{}: decoded == content ok: {equal}", trained.path.display());
+    }
+    println!("all files decode ok: {decode_ok}");
 }
