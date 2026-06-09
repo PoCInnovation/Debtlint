@@ -10,8 +10,10 @@
     - ```publish-update```
 
 2. Set the API token in a github secret named ```CARGO_REGISTRY_TOKEN```.
-
 The workflow uses this token to authenticate and publish the crate during the release pipeline.
+
+3. Set the branch that will be commited by the github bot on the ```RELEASE_BRANCH``` github variable.
+
 
 ---
 
@@ -44,6 +46,7 @@ The tag must follow the crate version format:
 
 ## Notes
 
+- For first-time use, change the package version to **0.0.0** in the `version` section in the `Cargo.toml` file and ```git push --tags v0.1.0```.
 - The tag version must follow semantic versioning (`vMAJOR.MINOR.PATCH`)
 - The workflow only triggers for tags starting with `v`
-- The current link of the test package is ```https://crates.io/crates/test-debtlint```
+- The current link of the test package is ```https://crates.io/crates/new-test-ci```
