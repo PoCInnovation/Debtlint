@@ -1,7 +1,8 @@
 use std::fs::{self, ReadDir, File};
+use std::os::unix::process::CommandExt;
 use std::path::{PathBuf};
 use std::io::{self, BufRead};
-
+use std::process;
 pub struct SourceFile {
     pub path: PathBuf,
     pub content: String,
@@ -57,39 +58,74 @@ fn is_path_excluded(path: &str, excluded_paths: &Option<Vec<String>>) -> bool
     excluded.contains(&absolute.to_string_lossy().to_string())
 }
 
-fn ingest_codebase(dir: ReadDir, excluded_paths: &Option<Vec<String>>,  codebase:  &mut Vec<SourceFile>) -> std::io::Result<()>
+fn collect_source_files() -> Vec<SourceFile>
 {
-    for e in dir {
-        let entry = e?;
-        let is_dir = entry.file_type()?.is_dir();
+    let mut codebase:  Vec<SourceFile> = vec![];
+
+    let Ok(output) = std::process::Command::new("git")
+    .arg("ls-files")
+    .output() else {return vec![]};
+
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .for_each(|path| {
+            let Some(extension) = path.split('.').last() else {return};
+            if !path.starts_with('.') && CODE_EXTENSIONS.contains(&extension){
+
+                let Some(source_file) = get_file(path) else {return};
+                codebase.push(source_file);
+            }
+        });
+    codebase
+}
+
+fn collect_source_files_fallback(dir: ReadDir, excluded_paths: &Option<Vec<String>>,  codebase:  &mut Vec<SourceFile>)
+{
+    for entry in dir.flatten() {
         let file_path = entry.path();
         let file_name = entry.file_name();
 
+
         let Some(file_path_str) = file_path.to_str() else {continue};
         let Some(file_name_str) = file_name.to_str() else {continue};
+
+        let Ok(file_type) = entry.file_type() else {continue};
 
         if is_path_excluded(file_path_str, &excluded_paths) {continue};
 
         let Some(extension) = file_name_str.split('.').last() else {continue};
 
-        if is_dir && file_name_str.chars().next().unwrap() != '.' {
-            ingest_codebase(entry.path().read_dir()?, excluded_paths, codebase)?;
+        if file_type.is_dir() && file_name_str.chars().next().unwrap() != '.' {
+            let Ok(dir) = entry.path().read_dir() else {continue};
+            collect_source_files_fallback(dir, excluded_paths, codebase);
         }
         if CODE_EXTENSIONS.contains(&extension){
             let Some(source_file) = get_file(file_path_str) else {continue};
             codebase.push(source_file);
         }
     }
-    Ok(())
+}
+
+fn ingest_codebase() -> Vec<SourceFile>{
+
+    let mut codebase:  Vec<SourceFile> = vec![];
+    if std::fs::exists(".git").is_ok(){
+        codebase = collect_source_files();
+    } else {
+        let excluded_paths = get_excluded_paths();
+        let Ok(dir) = fs::read_dir("./") else {return vec![]};
+        collect_source_files_fallback(dir, &excluded_paths, &mut codebase);
+    }
+    codebase
 }
 
 fn main() -> std::io::Result<()> {
 
-    let mut codebase:  Vec<SourceFile> = vec![];
-    let excluded_paths = get_excluded_paths();
+    let codebase = ingest_codebase();
 
-    let dir = fs::read_dir("./")?;
-    ingest_codebase(dir, &excluded_paths, &mut codebase)?;
+    for i in codebase {
+        println!("{}", i.path.to_string_lossy());
+    }
 
     Ok(())
 
