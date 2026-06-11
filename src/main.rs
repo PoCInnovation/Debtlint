@@ -20,7 +20,6 @@ struct Args { // struct to recup user input
 
 fn main() {
     let args: Args = Args::parse(); // fill Args
-
     let content = match read_corpus(&args.file) {
         Ok(content) => content,
         Err(err) => {
@@ -28,12 +27,10 @@ fn main() {
             std::process::exit(1);
         }
     };
-
     let files = vec![SourceFile {
         path: args.file.clone(),
         content: content.clone(),
     }];
-
     let result = train_corpus(&files, args.vocab_size, args.min_frequency);
     let initial_tokens = result.initial_token_count;
     let encoded_tokens = result.encoded_token_count();
@@ -42,7 +39,6 @@ fn main() {
     } else {
         0.0
     };
-
     println!("source files: {}", result.files.len());
     println!("characters: {}", content.chars().count());
     println!("bytes: {}", content.len());
