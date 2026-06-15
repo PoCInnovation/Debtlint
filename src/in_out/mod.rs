@@ -1,2 +1,5 @@
 mod reader;
-pub use reader::read_corpus; //  use read_corpus dunc
+mod writer;
+
+pub use reader::read_corpus;
+pub use writer::write_encoded_sequence_json;

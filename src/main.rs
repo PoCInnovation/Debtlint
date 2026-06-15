@@ -1,6 +1,6 @@
 use std::path::PathBuf; // for path to a file
 use clap::Parser;
-use debtlint::in_out::read_corpus; // for read the file
+use debtlint::in_out::{read_corpus, write_encoded_sequence_json};
 use debtlint::tokenizer::{decode_sequence, train_corpus, SourceFile, BASE_VOCAB_SIZE};
 
 #[derive(Parser, Debug)]
@@ -16,6 +16,9 @@ struct Args { // struct to recup user input
     vocab_size: u32, // arg is a u32 int -> for later -> size of the vocabulary
     #[arg(long, default_value_t = 2)] // arg long with def 2
     min_frequency: usize, // arg is a usize int -> for later -> frequency min for a paire to be merged
+    /// Write the encoded token sequence as JSON before decoding (default: <FILE>.encoded.json)
+    #[arg(long, value_name = "PATH")]
+    output_encoded: Option<PathBuf>,
 }
 
 fn main() {
@@ -57,6 +60,19 @@ fn main() {
 
     let mut decode_ok = true;
     for (source, trained) in files.iter().zip(result.files.iter()) {
+        let encoded_path = args
+            .output_encoded
+            .clone()
+            .unwrap_or_else(|| source.path.with_extension("encoded.json"));
+        if let Err(err) = write_encoded_sequence_json(&encoded_path, &trained.sequence) {
+            eprintln!(
+                "failed to write encoded sequence to {}: {err}",
+                encoded_path.display()
+            );
+            std::process::exit(1);
+        }
+        println!("encoded sequence written to: {}", encoded_path.display());
+
         let decoded = decode_sequence(&trained.sequence, &result.vocabulary);
         let equal = decoded == source.content;
         decode_ok &= equal;
