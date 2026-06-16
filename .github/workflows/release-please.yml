@@ -1,0 +1,14 @@
+name: Release-Please
+
+on:
+  push:
+    branches:
+      - Rayan-ouer/det-8-debtlint-integrations
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: rust
+          default-branch: Rayan-ouer/det-8-debtlint-integrations
