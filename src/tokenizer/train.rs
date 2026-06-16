@@ -4,7 +4,7 @@ use crate::tokenizer::pairs::{count_pairs_corpus, most_common_pair};
 use crate::tokenizer::replace::{find_pair_occurrences, replace_pair};
 use crate::tokenizer::sequence::text_to_sequence;
 use crate::tokenizer::SourceFile;
-use crate::tokenizer::{Token, Vocabulary, BASE_VOCAB_SIZE};
+use crate::tokenizer::{Token, Vocabulary};
 
 pub struct FileTokens {
     pub path: PathBuf,
@@ -26,27 +26,25 @@ impl BpeTrainingResult {
 
 pub fn train_corpus(files: &[SourceFile], target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult
 {
-    // map the files to a vector of pairs (path, sequence of tokens)
-    let file_sequences: Vec<(PathBuf, Vec<Token>)> = files.iter().map(|file| (file.path.clone(), text_to_sequence(&file.content))).collect();
-    // train the BPE from the file sequences
-    train_from_sequences(file_sequences, target_vocab_size, min_frequency)
-}
-
-// func to train the BPE from a sequence of tokens
-pub fn train_bpe(sequence: Vec<Token>, target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult
-{
-    train_from_sequences(vec![(PathBuf::from("-"), sequence)], target_vocab_size, min_frequency) // from - means we are training from a sequence of tokens
-}
-
-// func to train from a vector of pairs
-fn train_from_sequences(mut file_sequences: Vec<(PathBuf, Vec<Token>)>, target_vocab_size: u32, // vector of pairs (path, sequence of tokens)
-    min_frequency: usize,) -> BpeTrainingResult
-    {
-    let initial_token_count: usize = file_sequences.iter().map(|(_, sequence)| sequence.len()).sum(); // sum of all the sequences tokens (all tokens in all files)
     let mut vocabulary = Vocabulary::init_base();
+    vocabulary.extend_with_corpus_symbols(files); // extend the vocabulary with the corpus symbols
+
+    let file_sequences: Vec<(PathBuf, Vec<Token>)> = files.iter().map(|file| {
+        (file.path.clone(), text_to_sequence(&file.content, &vocabulary)) // create the file sequences
+    }).collect();
+    train_from_sequences(file_sequences, vocabulary, target_vocab_size, min_frequency) // train the sequences
+}
+
+pub fn train_bpe(sequence: Vec<Token>, target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult {
+    let vocabulary = Vocabulary::init_base();
+    train_from_sequences(vec![(PathBuf::from("-"), sequence)], vocabulary, target_vocab_size, min_frequency,) // from - means we are training from a sequence of tokens
+}
+
+fn train_from_sequences(mut file_sequences: Vec<(PathBuf, Vec<Token>)>, mut vocabulary: Vocabulary, target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult {
+    let initial_token_count: usize = file_sequences.iter().map(|(_, sequence)| sequence.len()).sum(); // sum of all the sequences tokens (all tokens in all files)
+    let merge_start_id = vocabulary.merge_start_id(); // get the merge start id
 
     while (vocabulary.len() as u32) < target_vocab_size { // while the vocab didnt reach the max size we fixe
-
         let sequences: Vec<&[Token]> = file_sequences.iter().map(|(_, sequence)| sequence.as_slice()).collect();
         let counts = count_pairs_corpus(&sequences); // count the pairs in sequences
         let Some((pair, frequency)) = most_common_pair(&counts) else { // get the most common pair and frequance
@@ -61,11 +59,9 @@ fn train_from_sequences(mut file_sequences: Vec<(PathBuf, Vec<Token>)>, target_v
             *sequence = replace_pair(sequence, pair, new_token); // replace the pair with the new token
         }
     }
-
-    let files: Vec<FileTokens> = file_sequences.into_iter().map(|(path, sequence)| FileTokens { path, sequence }).collect(); // convert the vector of pairs to a vector of FileTokens
-
+    let files: Vec<FileTokens> = file_sequences.into_iter().map(|(path, sequence)| FileTokens { path, sequence }).collect(); // recup file squences (all sequences) and create the struct FileTokens with the path and the sequence
     BpeTrainingResult {
-        merges: vocabulary.len() as u32 - BASE_VOCAB_SIZE,
+        merges: vocabulary.len() as u32 - merge_start_id,
         files,
         vocabulary,
         initial_token_count,

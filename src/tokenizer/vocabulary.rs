@@ -1,14 +1,15 @@
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::PathBuf;
+
 use crate::tokenizer::pairs::TokenPair;
+use crate::tokenizer::SourceFile;
+
 pub type Token = u32;
+
 /// Fixed alphabet with letters lower and upper digits space punctuation then UNK.
 pub const BASE_ALPHABET: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 \t\n{}()[];,.=+-*/<>!&|^~%#@_`'\"\\:?\u{FFFD}"; // \u{FFFD} is the replacement character
 pub const BASE_VOCAB_SIZE: u32 = 97; // size of the base alphabet
 pub const UNK_TOKEN: Token = BASE_VOCAB_SIZE - 1; // token for unknown characters
-
-pub fn char_to_token(c: char) -> Token {
-    BASE_ALPHABET.chars().position(|symbol| symbol == c).map(|index| index as Token).unwrap_or(UNK_TOKEN) // return the token for the character or UNK_TOKEN if not found
-}
 
 pub struct FileOccurrences {
     pub path: PathBuf,
@@ -62,12 +63,60 @@ impl VocabularyEntry {
 
 pub struct Vocabulary {
     pub entries: Vec<VocabularyEntry>, // vector of all vocab letter and pair
+    char_to_id: HashMap<char, Token>, // hashmap to map the character to the token
+    merge_start_id: Token, // token for the start of the merge
 }
 
 impl Vocabulary {
     pub fn init_base() -> Self {
-        let entries = BASE_ALPHABET.chars().map(VocabularyEntry::symbol).collect(); // create the vector of entries
-        Self { entries } // return the vocabulary
+        let entries = BASE_ALPHABET.chars().map(VocabularyEntry::symbol).collect(); // collect the char of the base alphabet and create the entries
+        let mut vocabulary = Self { // create the vocabulary
+            entries,
+            char_to_id: HashMap::new(), // create the hashmap
+            merge_start_id: 0, // set the merge start id to 0
+        };
+        vocabulary.rebuild_char_index(); // rebuild the char index
+        vocabulary.merge_start_id = vocabulary.entries.len() as Token; // set the merge start id to len of entries
+        return vocabulary;
+    }
+
+    pub fn extend_with_corpus_symbols(&mut self, files: &[SourceFile])
+    {
+        let fixed: HashSet<char> = BASE_ALPHABET.chars().collect(); // get the fixed alphabet
+        let mut extra = BTreeSet::new(); // create the extra set -> BTreeSet is a container that stores unique elements in a sorted order (no duplicate)
+
+        for file in files {
+            for ch in file.content.chars() {
+                if !fixed.contains(&ch) {
+                    extra.insert(ch); // insert in extra only if not in fixed
+                }
+            }
+        }
+        for ch in extra {
+            self.entries.push(VocabularyEntry::symbol(ch)); // push the symbol in the entries
+        }
+        self.rebuild_char_index();
+        self.merge_start_id = self.entries.len() as Token;
+    }
+
+    // func to get the token for a character
+    pub fn token_for_char(&self, ch: char) -> Option<Token> {
+        self.char_to_id.get(&ch).copied()
+    }
+
+    // func to encode a character
+    pub fn encode_char(&self, ch: char) -> Token {
+        self.token_for_char(ch).unwrap_or(UNK_TOKEN)
+    }
+
+    // func to get the merge start id
+    pub fn merge_start_id(&self) -> Token {
+        self.merge_start_id
+    }
+
+    // func to get the dynamic symbol count
+    pub fn dynamic_symbol_count(&self) -> u32 {
+        self.merge_start_id.saturating_sub(BASE_VOCAB_SIZE)
     }
 
     pub fn len(&self) -> usize {
@@ -82,5 +131,14 @@ impl Vocabulary {
         let id = self.entries.len() as Token;
         self.entries.push(VocabularyEntry::merge(pair, occurrences));
         id
+    }
+
+    fn rebuild_char_index(&mut self) {
+        self.char_to_id.clear();
+        for (id, entry) in self.entries.iter().enumerate() {
+            if let VocabularyEntry::Symbol(ch) = entry {
+                self.char_to_id.insert(*ch, id as Token); // insert the character and the id in the hashmap
+            }
+        }
     }
 }
