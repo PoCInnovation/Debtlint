@@ -1,30 +1,9 @@
 ---
 name: debtlint-skill
-
-description: |
-  debtlint scans a codebase and returns a Json list of duplicate code blocks
+description: | 
+  debtlint scans a codebase and returns a Json list of duplicate code block.
   (file, start_line, end_line). Returns empty Json if no duplicates found.
-
-  ```json
-  [
-    {
-      "file": "src/main.py,
-      "start_line": 12,
-      "end_line": 28
-    }
-  ]
-  ```
-
-  Run debtlint after every code generation.
-  If Json is not empty, refactor the specified code, then re-run debtlint.
-  Repeat until Json is empty or after 3 iterations reached.
-  If duplicates persist after 3 iterations, stop and report remaining issues to the user.
-  
-  Use debtlint with the current directory(.) unless user specifies another directory.
-  
-  ```
-  debtlint scan . --format json
-  ```
+  Use after every code generation.
 
 compatibility: debtlint package. Install it with ```cargo install debtlint```.
 allowed-tools: Bash(cargo install debtlint), Bash(debtlint:*)
@@ -33,3 +12,20 @@ metadata:
   author: POC
   version: "0.1.0"
 ---
+
+## When to Apply
+
+Always apply these guidelines every time you generate code:
+- Run debtlint after every code generation.
+- If Json is not empty, refactor the specified code, then re-run debtlint.
+- Repeat until Json is empty or after 3 iterations reached.
+- If duplicates persist after 3 iterations, stop and report remaining issues to the user.
+- Use debtlint with the current directory(.) unless user specifies another directory.
+
+## Usage
+
+```
+debtlint scan . --format json
+
+```
+
