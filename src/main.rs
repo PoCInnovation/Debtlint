@@ -52,9 +52,10 @@ fn main() {
     println!("min pair frequency: {}", args.min_frequency);
     println!("merges performed: {}", result.merges);
     println!(
-        "vocabulary size: {} ({} base + {} merged)",
+        "vocabulary size: {} ({} fixed + {} dynamic + {} merged)",
         result.vocabulary.len(),
         BASE_VOCAB_SIZE,
+        result.vocabulary.dynamic_symbol_count(),
         result.merges
     );
 
