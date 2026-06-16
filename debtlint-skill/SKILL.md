@@ -28,4 +28,3 @@ Always apply these guidelines every time you generate code:
 debtlint scan . --format json
 
 ```
-
