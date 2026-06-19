@@ -4,7 +4,7 @@ use crate::tokenizer::pairs::{count_pairs_corpus, most_common_pair};
 use crate::tokenizer::replace::{find_pair_occurrences, replace_pair};
 use crate::tokenizer::sequence::text_to_sequence;
 use crate::tokenizer::SourceFile;
-use crate::tokenizer::{Token, Vocabulary};
+use crate::tokenizer::{Token, Vocabulary, VocabularyEntry};
 
 pub struct FileTokens {
     pub path: PathBuf,
@@ -33,6 +33,36 @@ pub fn train_corpus(files: &[SourceFile], target_vocab_size: u32, min_frequency:
         (file.path.clone(), text_to_sequence(&file.content, &vocabulary)) // create the file sequences
     }).collect();
     train_from_sequences(file_sequences, vocabulary, target_vocab_size, min_frequency) // train the sequences
+}
+
+// merge the tokens in the sequences with the vocabulary
+pub fn encode_corpus(files: &[SourceFile], vocabulary: Vocabulary) -> BpeTrainingResult
+{
+    let merge_start_id = vocabulary.merge_start_id();
+    let mut file_sequences: Vec<(PathBuf, Vec<Token>)> = files.iter()
+        .map(|file| { (file.path.clone(), text_to_sequence(&file.content, &vocabulary))}).collect();
+    let initial_token_count: usize = file_sequences.iter().map(|(_, sequence)| sequence.len()).sum();
+
+    for (id, entry) in vocabulary.entries.iter().enumerate() {
+        let token_id = id as Token;
+        if token_id < merge_start_id {
+            continue;
+        }
+        let VocabularyEntry::Merge { pair, .. } = entry else {
+            continue;
+        };
+        for (_, sequence) in &mut file_sequences {
+            *sequence = replace_pair(sequence, *pair, token_id);
+        }
+    }
+    let files: Vec<FileTokens> = file_sequences.into_iter().map(|(path, sequence)| FileTokens { path, sequence }).collect();
+
+    BpeTrainingResult {
+        merges: vocabulary.len() as u32 - merge_start_id,
+        files,
+        vocabulary,
+        initial_token_count,
+    }
 }
 
 pub fn train_bpe(sequence: Vec<Token>, target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult {
