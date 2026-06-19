@@ -13,6 +13,6 @@ pub use sequence::text_to_sequence;
 pub use source::SourceFile;
 pub use train::{encode_corpus, train_bpe, train_corpus, BpeTrainingResult, FileTokens};
 pub use vocabulary::{
-    FileOccurrences, Token, Vocabulary, VocabularyEntry, VocabularyExport,
-    VocabularyExportError, BASE_ALPHABET, BASE_VOCAB_SIZE, UNK_TOKEN, VOCAB_EXPORT_VERSION,
+    FileOccurrences, Token, Vocabulary, VocabularyEntry, VocabularyExport, BASE_ALPHABET,
+    BASE_VOCAB_SIZE, UNK_TOKEN, VOCAB_EXPORT_VERSION,
 };

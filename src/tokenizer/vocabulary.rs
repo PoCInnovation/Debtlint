@@ -1,16 +1,27 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::io::{self, ErrorKind, Result};
 use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 
 use crate::tokenizer::pairs::TokenPair;
 use crate::tokenizer::SourceFile;
 
 pub type Token = u32;
+pub const VOCAB_EXPORT_VERSION: u32 = 1;
+
+#[derive(Serialize, Deserialize)]
+pub struct VocabularyExport {
+    pub format_version: u32,
+    pub entries: Vec<VocabularyEntry>,
+    pub merge_start_id: Token,
+}
 
 /// Fixed alphabet with letters lower and upper digits space punctuation then UNK.
 pub const BASE_ALPHABET: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 \t\n{}()[];,.=+-*/<>!&|^~%#@_`'\"\\:?\u{FFFD}"; // \u{FFFD} is the replacement character
 pub const BASE_VOCAB_SIZE: u32 = 97; // size of the base alphabet
 pub const UNK_TOKEN: Token = BASE_VOCAB_SIZE - 1; // token for unknown characters
 
+#[derive(Clone, Serialize, Deserialize)] // serialize and deserialize the file occurrences
 pub struct FileOccurrences {
     pub path: PathBuf,
     pub offsets: Vec<usize>,
@@ -29,6 +40,7 @@ impl FileOccurrences {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub enum VocabularyEntry { // enum to manage the vocabulary entrie
     Symbol(char),
     Merge {
@@ -131,6 +143,34 @@ impl Vocabulary {
         let id = self.entries.len() as Token;
         self.entries.push(VocabularyEntry::merge(pair, occurrences));
         id
+    }
+
+    // create the export struct
+    pub fn to_export(&self) -> VocabularyExport {
+        VocabularyExport {
+            format_version: VOCAB_EXPORT_VERSION,
+            entries: self.entries.clone(),
+            merge_start_id: self.merge_start_id,
+        }
+    }
+
+    pub fn from_export(export: VocabularyExport) -> Result<Self> {
+        if export.format_version != VOCAB_EXPORT_VERSION {
+            return Err(io::Error::new(
+                ErrorKind::InvalidData,
+                format!("unsupported vocabulary export version {} (expected {})",
+                    export.format_version, VOCAB_EXPORT_VERSION,
+                ),
+            ));
+        }
+
+        let mut vocabulary = Self {
+            entries: export.entries,
+            char_to_id: HashMap::new(),
+            merge_start_id: export.merge_start_id,
+        };
+        vocabulary.rebuild_char_index();
+        Ok(vocabulary)
     }
 
     fn rebuild_char_index(&mut self) {
