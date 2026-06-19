@@ -21,6 +21,24 @@ cargo run -- fixtures/unicode.txt
 | `--vocab-size`     | `1000`                | Taille max du vocabulaire (base + dynamique + merges) |
 | `--min-frequency`  | `2`                   | Fréquence min d'une paire pour déclencher un merge    |
 | `--output-encoded` | `<FILE>.encoded.json` | Chemin du JSON de la séquence encodée                 |
+| `--save-vocab`     | —                     | Sauvegarde le vocabulaire entraîné en JSON            |
+| `--load-vocab`     | —                     | Charge un vocabulaire JSON (skip le training BPE)     |
+
+## Persistance du vocabulaire
+
+**Sauver après training :**
+
+```bash
+cargo run -- fixtures/sample.rs --vocab-size 500 --save-vocab fixtures/sample.vocab.json
+```
+
+**Recharger (sans refaire le BPE) :**
+
+```bash
+cargo run -- fixtures/sample.rs --load-vocab fixtures/sample.vocab.json
+```
+
+Format `*.vocab.json` : export Serde (`entries`, `merge_start_id`, `format_version`).
 
 ## Exemples utiles
 
