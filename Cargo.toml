@@ -1,9 +1,9 @@
 [package]
 name = "debtlint"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 authors = ["POC"]
-description = "Test of CI for debtlint crate"
+description = "A technical debt detection tool"
 repository = "https://github.com/PoCInnovation/Debtlint.git"
 readme = "README.md"
 license = "Apache-2.0"
