@@ -48,12 +48,6 @@ Format `*.vocab.json` : export Serde (`entries`, `merge_start_id`, `format_versi
 cargo run -- fixtures/sample.rs --vocab-size 500 --min-frequency 2
 ```
 
-**Unicode (`é`, emoji) :**
-
-```bash
-cargo run -- fixtures/unicode.txt --vocab-size 200
-```
-
 **JSON de sortie dans le repo :**
 
 ```bash
@@ -66,7 +60,7 @@ Le terminal affiche notamment :
 
 - `merges performed` — nombre de merges BPE
 - `vocabulary size` — `97 fixed + N dynamic + M merged`
-- `decoded == content ok: true` — round-trip encode/decode OK
+- `decoded == content ok: true` — texte encode/decode est le same OK
 - `encoded sequence written to: ...` — chemin du JSON
 
 Format JSON : `[135, 135, 105, 109, 109, 64]`
