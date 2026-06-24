@@ -1,6 +1,7 @@
 use crate::tokenizer::{Token, Vocabulary, VocabularyEntry};
 
-pub fn decode_token(token: Token, vocabulary: &Vocabulary) -> String { // decode the token and return the string
+pub fn decode_token(token: Token, vocabulary: &Vocabulary) -> String // decode the token and return the string
+{
     let Some(entry) = vocabulary.get(token) else { // get the entry from the vocab
         eprintln!("unknown token id: {token}"); // if not found
         return String::new();
@@ -16,6 +17,7 @@ pub fn decode_token(token: Token, vocabulary: &Vocabulary) -> String { // decode
     } // return the string
 }
 
-pub fn decode_sequence(sequence: &[Token], vocabulary: &Vocabulary) -> String {
+pub fn decode_sequence(sequence: &[Token], vocabulary: &Vocabulary) -> String
+{
     sequence.iter().map(|&token| decode_token(token, vocabulary)).collect() // decode the sequence and return the string
 }

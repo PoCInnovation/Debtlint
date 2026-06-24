@@ -3,7 +3,8 @@ use crate::tokenizer::Token;
 
 pub type TokenPair = (Token, Token); // type of a pair of token
 
-pub fn count_pairs(sequence: &[Token]) -> HashMap<TokenPair, usize> { // recup the token sequence and return a hashmap of pairs and their count of iteration
+pub fn count_pairs(sequence: &[Token]) -> HashMap<TokenPair, usize> // recup the token sequence and return a hashmap of pairs and their count of iteration
+{
     let mut counts = HashMap::new(); // create the hashmap
     for window in sequence.windows(2) { // for each window of 2 tokens (window return each pair of 2)
         let pair = (window[0], window[1]); // create the pair
@@ -12,7 +13,8 @@ pub fn count_pairs(sequence: &[Token]) -> HashMap<TokenPair, usize> { // recup t
     counts // return the hashmap
 }
 
-pub fn count_pairs_corpus(sequences: &[&[Token]]) -> HashMap<TokenPair, usize> {
+pub fn count_pairs_corpus(sequences: &[&[Token]]) -> HashMap<TokenPair, usize>
+{
     let mut counts = HashMap::new();
     for sequence in sequences {
         for window in sequence.windows(2) {
@@ -23,7 +25,8 @@ pub fn count_pairs_corpus(sequences: &[&[Token]]) -> HashMap<TokenPair, usize> {
     counts
 }
 
-pub fn most_common_pair(counts: &HashMap<TokenPair, usize>) -> Option<(TokenPair, usize)> { // recup the hashmap and return the pair with the highest count
+pub fn most_common_pair(counts: &HashMap<TokenPair, usize>) -> Option<(TokenPair, usize)> // recup the hashmap and return the pair with the highest count
+{
     let mut best: Option<(TokenPair, usize)> = None; // create the best pair
     for (&pair, &count) in counts { // for each pair and count in the hashmap
         let replace = match best {

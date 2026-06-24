@@ -28,14 +28,16 @@ pub struct FileOccurrences {
 }
 
 impl FileOccurrences {
-    pub fn new(path: PathBuf) -> Self {
+    pub fn new(path: PathBuf) -> Self
+    {
         Self {
             path,
             offsets: Vec::new(),
         }
     }
 
-    pub fn count(&self) -> usize {
+    pub fn count(&self) -> usize
+    {
         self.offsets.len() // return the number of occurrences in the file
     }
 }
@@ -50,22 +52,26 @@ pub enum VocabularyEntry { // enum to manage the vocabulary entrie
 }
 
 impl VocabularyEntry {
-    pub const fn symbol(ch: char) -> Self {
+    pub const fn symbol(ch: char) -> Self
+    {
         Self::Symbol(ch)
     }
 
-    pub fn merge(pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Self {
+    pub fn merge(pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Self
+    {
         Self::Merge { pair, occurrences }
     }
 
-    pub fn pair(&self) -> Option<TokenPair> { // getter for the pair
+    pub fn pair(&self) -> Option<TokenPair> // getter for the pair
+    {
         match self {
             Self::Symbol(_) => None, // if the entry is a symbol return None
             Self::Merge { pair, .. } => Some(*pair), // if the entry is a merge return the pair
         }
     }
 
-    pub fn occurrences(&self) -> &[FileOccurrences] { // getter for the occurrence
+    pub fn occurrences(&self) -> &[FileOccurrences] // getter for the occurrence
+    {
         match self {
             Self::Symbol(_) => &[],
             Self::Merge { occurrences, .. } => occurrences,
@@ -80,7 +86,8 @@ pub struct Vocabulary {
 }
 
 impl Vocabulary {
-    pub fn init_base() -> Self {
+    pub fn init_base() -> Self
+    {
         let entries = BASE_ALPHABET.chars().map(VocabularyEntry::symbol).collect(); // collect the char of the base alphabet and create the entries
         let mut vocabulary = Self { // create the vocabulary
             entries,
@@ -112,41 +119,49 @@ impl Vocabulary {
     }
 
     // func to get the token for a character
-    pub fn token_for_char(&self, ch: char) -> Option<Token> {
+    pub fn token_for_char(&self, ch: char) -> Option<Token>
+    {
         self.char_to_id.get(&ch).copied()
     }
 
     // func to encode a character
-    pub fn encode_char(&self, ch: char) -> Token {
+    pub fn encode_char(&self, ch: char) -> Token
+    {
         self.token_for_char(ch).unwrap_or(UNK_TOKEN)
     }
 
     // func to get the merge start id
-    pub fn merge_start_id(&self) -> Token {
+    pub fn merge_start_id(&self) -> Token
+    {
         self.merge_start_id
     }
 
     // func to get the dynamic symbol count
-    pub fn dynamic_symbol_count(&self) -> u32 {
+    pub fn dynamic_symbol_count(&self) -> u32
+    {
         self.merge_start_id.saturating_sub(BASE_VOCAB_SIZE)
     }
 
-    pub fn len(&self) -> usize {
+    pub fn len(&self) -> usize
+    {
         self.entries.len() // return the length of the vocab
     }
 
-    pub fn get(&self, token: Token) -> Option<&VocabularyEntry> {
+    pub fn get(&self, token: Token) -> Option<&VocabularyEntry>
+    {
         self.entries.get(token as usize) // return the struct entry of the token
     }
 
-    pub fn push_merge(&mut self, pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Token {
+    pub fn push_merge(&mut self, pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Token
+    {
         let id = self.entries.len() as Token;
         self.entries.push(VocabularyEntry::merge(pair, occurrences));
         id
     }
 
     // create the export struct
-    pub fn to_export(&self) -> VocabularyExport {
+    pub fn to_export(&self) -> VocabularyExport
+    {
         VocabularyExport {
             format_version: VOCAB_EXPORT_VERSION,
             entries: self.entries.clone(),
@@ -154,7 +169,8 @@ impl Vocabulary {
         }
     }
 
-    pub fn from_export(export: VocabularyExport) -> Result<Self> {
+    pub fn from_export(export: VocabularyExport) -> Result<Self>
+    {
         if export.format_version != VOCAB_EXPORT_VERSION {
             return Err(io::Error::new(
                 ErrorKind::InvalidData,
@@ -173,7 +189,8 @@ impl Vocabulary {
         Ok(vocabulary)
     }
 
-    fn rebuild_char_index(&mut self) {
+    fn rebuild_char_index(&mut self)
+    {
         self.char_to_id.clear();
         for (id, entry) in self.entries.iter().enumerate() {
             if let VocabularyEntry::Symbol(ch) = entry {

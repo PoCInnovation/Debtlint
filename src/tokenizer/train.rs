@@ -19,7 +19,8 @@ pub struct BpeTrainingResult { // struct to store the result of the training
 }
 
 impl BpeTrainingResult {
-    pub fn encoded_token_count(&self) -> usize { // func to count the number of encoded tokens
+    pub fn encoded_token_count(&self) -> usize // func to count the number of encoded tokens
+    {
         self.files.iter().map(|f| f.sequence.len()).sum() // sum of all the sequences tokens (all tokens in all files)
     }
 }
@@ -65,7 +66,8 @@ pub fn encode_corpus(files: &[SourceFile], vocabulary: Vocabulary) -> BpeTrainin
     }
 }
 
-pub fn train_bpe(sequence: Vec<Token>, target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult {
+pub fn train_bpe(sequence: Vec<Token>, target_vocab_size: u32, min_frequency: usize,) -> BpeTrainingResult
+{
     let vocabulary = Vocabulary::init_base();
     train_from_sequences(vec![(PathBuf::from("-"), sequence)], vocabulary, target_vocab_size, min_frequency,) // from - means we are training from a sequence of tokens
 }
