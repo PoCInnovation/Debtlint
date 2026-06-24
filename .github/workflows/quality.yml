@@ -2,10 +2,10 @@ name: Quality
 
 on:
   pull_request:
-    paths: ['**.rs']
+    branches: [ "main" ]
 
 jobs:
-  format:
+  check_quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
