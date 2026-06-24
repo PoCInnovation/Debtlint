@@ -14,7 +14,6 @@ jobs:
             - name: Install rust
               run: |
                 curl https://sh.rustup.rs -sSf -y | sh
-                cargo install cargo-set-version
 
             - name: Publish package
               run: |
