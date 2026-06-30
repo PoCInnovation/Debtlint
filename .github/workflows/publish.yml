@@ -1,0 +1,21 @@
+name: Publish crate
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+\.[0-9]+\.[0-9]+'
+
+jobs:
+    publish_package:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Install rust
+              run: |
+                curl https://sh.rustup.rs -sSf -y | sh
+
+            - name: Publish package
+              run: |
+                echo ${{ secrets.CARGO_REGISTRY_TOKEN }} | cargo login
+                cargo publish
