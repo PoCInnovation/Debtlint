@@ -1,0 +1,984 @@
+{
+  "format_version": 1,
+  "entries": [
+    {
+      "Symbol": "a"
+    },
+    {
+      "Symbol": "b"
+    },
+    {
+      "Symbol": "c"
+    },
+    {
+      "Symbol": "d"
+    },
+    {
+      "Symbol": "e"
+    },
+    {
+      "Symbol": "f"
+    },
+    {
+      "Symbol": "g"
+    },
+    {
+      "Symbol": "h"
+    },
+    {
+      "Symbol": "i"
+    },
+    {
+      "Symbol": "j"
+    },
+    {
+      "Symbol": "k"
+    },
+    {
+      "Symbol": "l"
+    },
+    {
+      "Symbol": "m"
+    },
+    {
+      "Symbol": "n"
+    },
+    {
+      "Symbol": "o"
+    },
+    {
+      "Symbol": "p"
+    },
+    {
+      "Symbol": "q"
+    },
+    {
+      "Symbol": "r"
+    },
+    {
+      "Symbol": "s"
+    },
+    {
+      "Symbol": "t"
+    },
+    {
+      "Symbol": "u"
+    },
+    {
+      "Symbol": "v"
+    },
+    {
+      "Symbol": "w"
+    },
+    {
+      "Symbol": "x"
+    },
+    {
+      "Symbol": "y"
+    },
+    {
+      "Symbol": "z"
+    },
+    {
+      "Symbol": "A"
+    },
+    {
+      "Symbol": "B"
+    },
+    {
+      "Symbol": "C"
+    },
+    {
+      "Symbol": "D"
+    },
+    {
+      "Symbol": "E"
+    },
+    {
+      "Symbol": "F"
+    },
+    {
+      "Symbol": "G"
+    },
+    {
+      "Symbol": "H"
+    },
+    {
+      "Symbol": "I"
+    },
+    {
+      "Symbol": "J"
+    },
+    {
+      "Symbol": "K"
+    },
+    {
+      "Symbol": "L"
+    },
+    {
+      "Symbol": "M"
+    },
+    {
+      "Symbol": "N"
+    },
+    {
+      "Symbol": "O"
+    },
+    {
+      "Symbol": "P"
+    },
+    {
+      "Symbol": "Q"
+    },
+    {
+      "Symbol": "R"
+    },
+    {
+      "Symbol": "S"
+    },
+    {
+      "Symbol": "T"
+    },
+    {
+      "Symbol": "U"
+    },
+    {
+      "Symbol": "V"
+    },
+    {
+      "Symbol": "W"
+    },
+    {
+      "Symbol": "X"
+    },
+    {
+      "Symbol": "Y"
+    },
+    {
+      "Symbol": "Z"
+    },
+    {
+      "Symbol": "0"
+    },
+    {
+      "Symbol": "1"
+    },
+    {
+      "Symbol": "2"
+    },
+    {
+      "Symbol": "3"
+    },
+    {
+      "Symbol": "4"
+    },
+    {
+      "Symbol": "5"
+    },
+    {
+      "Symbol": "6"
+    },
+    {
+      "Symbol": "7"
+    },
+    {
+      "Symbol": "8"
+    },
+    {
+      "Symbol": "9"
+    },
+    {
+      "Symbol": " "
+    },
+    {
+      "Symbol": "\t"
+    },
+    {
+      "Symbol": "\n"
+    },
+    {
+      "Symbol": "{"
+    },
+    {
+      "Symbol": "}"
+    },
+    {
+      "Symbol": "("
+    },
+    {
+      "Symbol": ")"
+    },
+    {
+      "Symbol": "["
+    },
+    {
+      "Symbol": "]"
+    },
+    {
+      "Symbol": ";"
+    },
+    {
+      "Symbol": ","
+    },
+    {
+      "Symbol": "."
+    },
+    {
+      "Symbol": "="
+    },
+    {
+      "Symbol": "+"
+    },
+    {
+      "Symbol": "-"
+    },
+    {
+      "Symbol": "*"
+    },
+    {
+      "Symbol": "/"
+    },
+    {
+      "Symbol": "<"
+    },
+    {
+      "Symbol": ">"
+    },
+    {
+      "Symbol": "!"
+    },
+    {
+      "Symbol": "&"
+    },
+    {
+      "Symbol": "|"
+    },
+    {
+      "Symbol": "^"
+    },
+    {
+      "Symbol": "~"
+    },
+    {
+      "Symbol": "%"
+    },
+    {
+      "Symbol": "#"
+    },
+    {
+      "Symbol": "@"
+    },
+    {
+      "Symbol": "_"
+    },
+    {
+      "Symbol": "`"
+    },
+    {
+      "Symbol": "'"
+    },
+    {
+      "Symbol": "\""
+    },
+    {
+      "Symbol": "\\"
+    },
+    {
+      "Symbol": ":"
+    },
+    {
+      "Symbol": "?"
+    },
+    {
+      "Symbol": "�"
+    },
+    {
+      "Merge": {
+        "pair": [
+          0,
+          13
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              91,
+              93,
+              97,
+              99,
+              103,
+              105
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          8,
+          55
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              10,
+              18,
+              26,
+              55,
+              63,
+              71
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          62,
+          62
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              29,
+              31,
+              71,
+              73
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          62,
+          98
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              9,
+              16,
+              23,
+              49,
+              56,
+              63
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          100,
+          54
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              9,
+              15,
+              21,
+              46,
+              52,
+              58
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          62,
+          1
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              11,
+              28,
+              45,
+              62
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          94,
+          101
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              8,
+              12,
+              40,
+              44
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          1,
+          97
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              60,
+              64,
+              68
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          104,
+          97
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              60,
+              63,
+              66
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          0,
+          3
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              3,
+              33
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          0,
+          62
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              21,
+              50
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          0,
+          103
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              6,
+              34
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          0,
+          105
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              55,
+              57
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          3,
+          67
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              4,
+              31
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          5,
+          13
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              0,
+              26
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          62,
+          65
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              13,
+              38
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          62,
+          76
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              9,
+              33
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          62,
+          106
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              1,
+              24
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          64,
+          64
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              20,
+              42
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          64,
+          66
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              18,
+              39
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          64,
+          99
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              12,
+              32
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          68,
+          113
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              7,
+              26
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          72,
+          102
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              4,
+              22
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          75,
+          102
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              13,
+              30
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          80,
+          101
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              7,
+              23
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          99,
+          107
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              10,
+              25
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          103,
+          118
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              5,
+              19
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          108,
+          119
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              3,
+              16
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          110,
+          124
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              2,
+              14
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          111,
+          114
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              0,
+              11
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          112,
+          117
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              4,
+              14
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          116,
+          115
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              7,
+              16
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          120,
+          128
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              6,
+              14
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          121,
+          127
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              3,
+              10
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          122,
+          129
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              4,
+              10
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          123,
+          130
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              2,
+              7
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          125,
+          132
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              1,
+              5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          126,
+          133
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              0,
+              3
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "Merge": {
+        "pair": [
+          134,
+          131
+        ],
+        "occurrences": [
+          {
+            "path": "fixtures/sample.rs",
+            "offsets": [
+              0,
+              2
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "merge_start_id": 97
+}

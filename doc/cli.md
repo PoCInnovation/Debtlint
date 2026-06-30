@@ -1,0 +1,78 @@
+# Tester Debtlint en local
+
+## Lancer
+
+```bash
+cargo run -- <FILE>
+```
+
+Exemples avec les fixtures du repo :
+
+```bash
+cargo run -- fixtures/sample.rs
+cargo run -- fixtures/unicode.txt
+```
+
+## Options
+
+| Flag               | Défaut                | Description                                           |
+| --------------------| -----------------------| -------------------------------------------------------|
+| `FILE`             | *(obligatoire)*       | Fichier source à encoder                              |
+| `--vocab-size`     | `1000`                | Taille max du vocabulaire (base + dynamique + merges) |
+| `--min-frequency`  | `2`                   | Fréquence min d'une paire pour déclencher un merge    |
+| `--output-encoded` | `<FILE>.encoded.json` | Chemin du JSON de la séquence encodée                 |
+| `--save-vocab`     | —                     | Sauvegarde le vocabulaire entraîné en JSON            |
+| `--load-vocab`     | —                     | Charge un vocabulaire JSON (skip le training BPE)     |
+
+## Persistance du vocabulaire
+
+**Sauver après training :**
+
+```bash
+cargo run -- fixtures/sample.rs --vocab-size 500 --save-vocab fixtures/sample.vocab.json
+```
+
+**Recharger (sans refaire le BPE) :**
+
+```bash
+cargo run -- fixtures/sample.rs --load-vocab fixtures/sample.vocab.json
+```
+
+Format `*.vocab.json` : export Serde (`entries`, `merge_start_id`, `format_version`).
+
+## Exemples utiles
+
+**Rust + merges visibles :**
+
+```bash
+cargo run -- fixtures/sample.rs --vocab-size 500 --min-frequency 2
+```
+
+**JSON de sortie dans le repo :**
+
+```bash
+cargo run -- fixtures/sample.rs --output-encoded fixtures/sample.encoded.json
+```
+
+## Sortie attendue
+
+Le terminal affiche notamment :
+
+- `merges performed` — nombre de merges BPE
+- `vocabulary size` — `97 fixed + N dynamic + M merged`
+- `decoded == content ok: true` — texte encode/decode est le same OK
+- `encoded sequence written to: ...` — chemin du JSON
+
+Format JSON : `[135, 135, 105, 109, 109, 64]`
+
+## Piège fréquent
+
+`--vocab-size` doit être **> 97** (taille de la base fixe), sinon **aucun merge** ne se lance.
+
+```bash
+# ❌ 0 merge
+cargo run -- fixtures/sample.rs --vocab-size 50
+
+# ✅ merges OK
+cargo run -- fixtures/sample.rs --vocab-size 200
+```
