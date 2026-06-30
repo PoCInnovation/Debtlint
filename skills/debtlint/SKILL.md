@@ -1,6 +1,6 @@
 ---
-name: debtlint-skill
-description: | 
+name: debtlint
+description: >
   debtlint scans a codebase and returns a Json list of duplicate code block.
   (file, start_line, end_line). Returns empty Json if no duplicates found.
   Use after every code generation.
