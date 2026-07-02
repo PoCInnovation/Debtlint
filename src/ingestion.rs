@@ -100,7 +100,13 @@ fn collect_source_files_fallback(dir: ReadDir, excluded_paths: &Option<Vec<Strin
 pub fn ingest_codebase() -> Vec<SourceFile>{
 
     let mut codebase:  Vec<SourceFile> = vec![];
-    if std::fs::exists(".git").is_ok(){
+    let is_git_repo = std::process::Command::new("git")
+        .args(["rev-parse", "--is-inside-work-tree"])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if is_git_repo{
         codebase = collect_source_files();
     } else {
         let excluded_paths = get_excluded_paths();
