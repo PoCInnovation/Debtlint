@@ -4,13 +4,14 @@ description: >
   debtlint scans a codebase and returns a Json list of duplicate code block.
   (file, start_line, end_line). Returns empty Json if no duplicates found.
   Use after every code generation.
-
-compatibility: debtlint package. Install it with ```cargo install debtlint```.
-allowed-tools: Bash(cargo install debtlint), Bash(debtlint:*)
 license: Apache-2.0
+
+compatibility: Require debtlint package. Install it with ```cargo install debtlint```.
+allowed-tools: Bash(cargo install debtlint), Bash(debtlint:*)
 metadata:
   author: POC
   version: "0.1.0"
+  website: "https://poc-innovation.fr"
 ---
 
 ## When to Apply
