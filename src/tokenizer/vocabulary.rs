@@ -1,10 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::io::{self, ErrorKind, Result};
 use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
 
-use crate::tokenizer::pairs::TokenPair;
 use crate::tokenizer::SourceFile;
+use crate::tokenizer::pairs::TokenPair;
 
 pub type Token = u32;
 pub const VOCAB_EXPORT_VERSION: u32 = 1;
@@ -28,22 +28,21 @@ pub struct FileOccurrences {
 }
 
 impl FileOccurrences {
-    pub fn new(path: PathBuf) -> Self
-    {
+    pub fn new(path: PathBuf) -> Self {
         Self {
             path,
             offsets: Vec::new(),
         }
     }
 
-    pub fn count(&self) -> usize
-    {
+    pub fn count(&self) -> usize {
         self.offsets.len() // return the number of occurrences in the file
     }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum VocabularyEntry { // enum to manage the vocabulary entrie
+pub enum VocabularyEntry {
+    // enum to manage the vocabulary entrie
     Symbol(char),
     Merge {
         pair: TokenPair,
@@ -52,13 +51,11 @@ pub enum VocabularyEntry { // enum to manage the vocabulary entrie
 }
 
 impl VocabularyEntry {
-    pub const fn symbol(ch: char) -> Self
-    {
+    pub const fn symbol(ch: char) -> Self {
         Self::Symbol(ch)
     }
 
-    pub fn merge(pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Self
-    {
+    pub fn merge(pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Self {
         Self::Merge { pair, occurrences }
     }
 
@@ -81,26 +78,25 @@ impl VocabularyEntry {
 
 pub struct Vocabulary {
     pub entries: Vec<VocabularyEntry>, // vector of all vocab letter and pair
-    char_to_id: HashMap<char, Token>, // hashmap to map the character to the token
-    merge_start_id: Token, // token for the start of the merge
+    char_to_id: HashMap<char, Token>,  // hashmap to map the character to the token
+    merge_start_id: Token,             // token for the start of the merge
 }
 
 impl Vocabulary {
-    pub fn init_base() -> Self
-    {
+    pub fn init_base() -> Self {
         let entries = BASE_ALPHABET.chars().map(VocabularyEntry::symbol).collect(); // collect the char of the base alphabet and create the entries
-        let mut vocabulary = Self { // create the vocabulary
+        let mut vocabulary = Self {
+            // create the vocabulary
             entries,
             char_to_id: HashMap::new(), // create the hashmap
-            merge_start_id: 0, // set the merge start id to 0
+            merge_start_id: 0,          // set the merge start id to 0
         };
         vocabulary.rebuild_char_index(); // rebuild the char index
         vocabulary.merge_start_id = vocabulary.entries.len() as Token; // set the merge start id to len of entries
-        return vocabulary;
+        vocabulary
     }
 
-    pub fn extend_with_corpus_symbols(&mut self, files: &[SourceFile])
-    {
+    pub fn extend_with_corpus_symbols(&mut self, files: &[SourceFile]) {
         let fixed: HashSet<char> = BASE_ALPHABET.chars().collect(); // get the fixed alphabet
         let mut extra = BTreeSet::new(); // create the extra set -> BTreeSet is a container that stores unique elements in a sorted order (no duplicate)
 
@@ -119,49 +115,45 @@ impl Vocabulary {
     }
 
     // func to get the token for a character
-    pub fn token_for_char(&self, ch: char) -> Option<Token>
-    {
+    pub fn token_for_char(&self, ch: char) -> Option<Token> {
         self.char_to_id.get(&ch).copied()
     }
 
     // func to encode a character
-    pub fn encode_char(&self, ch: char) -> Token
-    {
+    pub fn encode_char(&self, ch: char) -> Token {
         self.token_for_char(ch).unwrap_or(UNK_TOKEN)
     }
 
     // func to get the merge start id
-    pub fn merge_start_id(&self) -> Token
-    {
+    pub fn merge_start_id(&self) -> Token {
         self.merge_start_id
     }
 
     // func to get the dynamic symbol count
-    pub fn dynamic_symbol_count(&self) -> u32
-    {
+    pub fn dynamic_symbol_count(&self) -> u32 {
         self.merge_start_id.saturating_sub(BASE_VOCAB_SIZE)
     }
 
-    pub fn len(&self) -> usize
-    {
+    pub fn len(&self) -> usize {
         self.entries.len() // return the length of the vocab
     }
 
-    pub fn get(&self, token: Token) -> Option<&VocabularyEntry>
-    {
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    pub fn get(&self, token: Token) -> Option<&VocabularyEntry> {
         self.entries.get(token as usize) // return the struct entry of the token
     }
 
-    pub fn push_merge(&mut self, pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Token
-    {
+    pub fn push_merge(&mut self, pair: TokenPair, occurrences: Vec<FileOccurrences>) -> Token {
         let id = self.entries.len() as Token;
         self.entries.push(VocabularyEntry::merge(pair, occurrences));
         id
     }
 
     // create the export struct
-    pub fn to_export(&self) -> VocabularyExport
-    {
+    pub fn to_export(&self) -> VocabularyExport {
         VocabularyExport {
             format_version: VOCAB_EXPORT_VERSION,
             entries: self.entries.clone(),
@@ -169,12 +161,12 @@ impl Vocabulary {
         }
     }
 
-    pub fn from_export(export: VocabularyExport) -> Result<Self>
-    {
+    pub fn from_export(export: VocabularyExport) -> Result<Self> {
         if export.format_version != VOCAB_EXPORT_VERSION {
             return Err(io::Error::new(
                 ErrorKind::InvalidData,
-                format!("unsupported vocabulary export version {} (expected {})",
+                format!(
+                    "unsupported vocabulary export version {} (expected {})",
                     export.format_version, VOCAB_EXPORT_VERSION,
                 ),
             ));
@@ -189,8 +181,7 @@ impl Vocabulary {
         Ok(vocabulary)
     }
 
-    fn rebuild_char_index(&mut self)
-    {
+    fn rebuild_char_index(&mut self) {
         self.char_to_id.clear();
         for (id, entry) in self.entries.iter().enumerate() {
             if let VocabularyEntry::Symbol(ch) = entry {

@@ -1,6 +1,6 @@
 use debtlint::in_out::{read_corpus, save_vocabulary, write_encoded_sequence_json};
-use debtlint::pipeline::{run_bpe, BpeConfig};
-use debtlint::tokenizer::{decode_sequence, SourceFile, BASE_VOCAB_SIZE};
+use debtlint::pipeline::{BpeConfig, run_bpe};
+use debtlint::tokenizer::{BASE_VOCAB_SIZE, SourceFile, decode_sequence};
 
 use crate::cli::Args;
 
@@ -10,18 +10,16 @@ pub fn run(args: &Args) -> std::io::Result<()> {
         path: args.file.clone(),
         content: content.clone(),
     }];
-    let result = run_bpe(&files,
+    let result = run_bpe(
+        &files,
         BpeConfig {
             vocab_size: args.vocab_size,
             min_frequency: args.min_frequency,
         },
         args.load_vocab.as_deref(),
     )?;
-    if args.load_vocab.is_some() {
-        println!(
-            "vocabulary loaded from: {}",
-            args.load_vocab.as_ref().unwrap().display()
-        );
+    if let Some(path) = &args.load_vocab {
+        println!("vocabulary loaded from: {}", path.display());
     }
     print_stats(&result, &content, args);
     if let Some(vocab_path) = &args.save_vocab {
@@ -32,8 +30,7 @@ pub fn run(args: &Args) -> std::io::Result<()> {
     Ok(())
 }
 
-fn print_stats(result: &debtlint::tokenizer::BpeTrainingResult, content: &str, args: &Args,)
-{
+fn print_stats(result: &debtlint::tokenizer::BpeTrainingResult, content: &str, args: &Args) {
     let initial_tokens = result.initial_token_count;
     let encoded_tokens = result.encoded_token_count();
     let compression = if initial_tokens > 0 {
@@ -62,8 +59,11 @@ fn print_stats(result: &debtlint::tokenizer::BpeTrainingResult, content: &str, a
     );
 }
 
-fn verify_decode_roundtrip(args: &Args, files: &[SourceFile], result: &debtlint::tokenizer::BpeTrainingResult)
-{
+fn verify_decode_roundtrip(
+    args: &Args,
+    files: &[SourceFile],
+    result: &debtlint::tokenizer::BpeTrainingResult,
+) {
     let mut decode_ok = true;
     for (source, trained) in files.iter().zip(result.files.iter()) {
         let encoded_path = args
