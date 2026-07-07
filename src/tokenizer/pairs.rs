@@ -33,13 +33,7 @@ pub fn most_common_pair(counts: &HashMap<TokenPair, usize>) -> Option<(TokenPair
         let replace = match best {
             None => true, // if the best pair is no set return true
             Some((best_pair, best_count)) => {
-                if count > best_count {
-                    true
-                } else if count == best_count && pair < best_pair {
-                    true
-                } else {
-                    false
-                }
+                count > best_count || count == best_count && pair < best_pair
             }
         };
         if replace {

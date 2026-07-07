@@ -18,11 +18,8 @@ pub fn run(args: &Args) -> std::io::Result<()> {
         },
         args.load_vocab.as_deref(),
     )?;
-    if args.load_vocab.is_some() {
-        println!(
-            "vocabulary loaded from: {}",
-            args.load_vocab.as_ref().unwrap().display()
-        );
+    if let Some(path) = &args.load_vocab {
+        println!("vocabulary loaded from: {}", path.display());
     }
     print_stats(&result, &content, args);
     if let Some(vocab_path) = &args.save_vocab {

@@ -93,7 +93,7 @@ impl Vocabulary {
         };
         vocabulary.rebuild_char_index(); // rebuild the char index
         vocabulary.merge_start_id = vocabulary.entries.len() as Token; // set the merge start id to len of entries
-        return vocabulary;
+        vocabulary
     }
 
     pub fn extend_with_corpus_symbols(&mut self, files: &[SourceFile]) {
@@ -136,6 +136,10 @@ impl Vocabulary {
 
     pub fn len(&self) -> usize {
         self.entries.len() // return the length of the vocab
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
     }
 
     pub fn get(&self, token: Token) -> Option<&VocabularyEntry> {
