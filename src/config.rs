@@ -11,8 +11,8 @@ enum Output {
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    directory: String,
-    excludes: Vec<String>,
+    pub directory: String,
+    pub excludes: Vec<String>,
     #[serde(default)]
     output: Output,
 }
