@@ -2,6 +2,7 @@ use std::fs::{self, File, ReadDir};
 use std::io::{self, BufRead};
 use std::path::PathBuf;
 use crate::config::Config;
+use std::path::Path;
 
 pub struct SourceFile {
     pub path: PathBuf,
@@ -48,17 +49,28 @@ fn is_path_excluded(path: &str, excluded_paths: &Vec<String>) -> bool {
     excluded_paths.contains(&absolute.to_string_lossy().to_string())
 }
 
-fn collect_source_files(excluded: Vec<String>) -> Vec<SourceFile> {
+fn is_inside_folder(path: &Path, folder: &Path) -> bool {
+    let (Ok(canonical_path), Ok(canonical_folder)) =
+        (path.canonicalize(), folder.canonicalize())
+    else {
+        return false;
+    };
+    canonical_path.starts_with(&canonical_folder)
+}
+
+fn collect_source_files(src: String, excluded: Vec<String>) -> Vec<SourceFile> {
     let mut codebase: Vec<SourceFile> = vec![];
     let Ok(output) = std::process::Command::new("git").arg("ls-files").output() else {
         return vec![];
     };
 
-
     String::from_utf8_lossy(&output.stdout)
         .lines()
         .for_each(|path| {
             if is_path_excluded(path, &excluded) {
+                return;
+            }
+            if !is_inside_folder(Path::new(path), Path::new(&src)){
                 return;
             }
             let Some(source_file) = get_file(path) else {
@@ -94,6 +106,7 @@ fn collect_source_files_fallback(
                 continue;
             };
             collect_source_files_fallback(dir, excluded_paths, codebase);
+            continue;
         }
         let Some(source_file) = get_file(file_path_str) else {
             continue;
@@ -111,11 +124,10 @@ pub fn ingest_codebase(cfg: Config) -> Vec<SourceFile> {
         .unwrap_or(false);
 
     let excluded_paths = get_excluded_paths(cfg.excludes);
-
     if is_git_repo {
-        codebase = collect_source_files(excluded_paths);
+        codebase = collect_source_files(cfg.src, excluded_paths);
     } else {
-        let Ok(dir) = fs::read_dir(cfg.directory) else {
+        let Ok(dir) = fs::read_dir(cfg.src) else {
             return vec![];
         };
         collect_source_files_fallback(dir, &excluded_paths, &mut codebase);
