@@ -14,11 +14,11 @@ runs:
   steps:
 
     - name: Install debtlint
-      shell: nu {0}
+      shell: sh
       run: cargo install debtlint
     
     - name: Run debtlint
-      shell: nu {0}
+      shell: sh
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: node ${{ github.action_path }}/index.js
