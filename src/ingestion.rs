@@ -3,11 +3,8 @@ use std::io::{self, BufRead};
 use std::path::PathBuf;
 use crate::config::Config;
 use std::path::Path;
+use debtlint::tokenizer::{SourceFile};
 
-pub struct SourceFile {
-    pub path: PathBuf,
-    pub content: String,
-}
 
 const COMMENT_CHARS: [&str; 2] = ["#", "//"];
 
