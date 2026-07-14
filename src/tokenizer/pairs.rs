@@ -42,3 +42,29 @@ pub fn most_common_pair(counts: &HashMap<TokenPair, usize>) -> Option<(TokenPair
     }
     best
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pairs_count() {
+        let sequence = [1, 2, 1, 2, 1, 2];
+        let counts = count_pairs(&sequence);
+        assert_eq!(counts[&(1, 2)], 3); // verif the count pair (1, 2) is 3
+        assert_eq!(counts[&(2, 1)], 2); // verif the count pair (2, 1) is 2
+        assert_eq!(counts.len(), 2);
+    }
+
+    #[test]
+    fn pairs_most_common() {
+        let counts: HashMap<(u32, u32), usize> = HashMap::from([((1, 2), 3), ((2, 1), 2)]);
+        assert_eq!(most_common_pair(&counts), Some(((1, 2), 3)));
+    }
+
+    #[test]
+    fn tie_break() {
+        let counts = HashMap::from([((2, 3), 2), ((1, 2), 2)]);
+        assert_eq!(most_common_pair(&counts), Some(((1, 2), 2)));
+    }
+}
