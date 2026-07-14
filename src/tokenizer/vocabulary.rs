@@ -190,3 +190,23 @@ impl Vocabulary {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn base_alphabet_size_is_97() {
+        assert_eq!(BASE_VOCAB_SIZE, 97); // verif the constant is 97
+        let vocabulary = Vocabulary::init_base();
+        assert_eq!(vocabulary.len(), BASE_VOCAB_SIZE as usize); // verif the vocab size is 97
+        assert_eq!(vocabulary.merge_start_id(), BASE_VOCAB_SIZE); // verif the merge start id is 97
+    }
+
+    #[test]
+    fn unknown_char_maps_to_unk() {
+        let vocabulary = Vocabulary::init_base();
+        assert_eq!(vocabulary.encode_char('🚀'), UNK_TOKEN); // verif the unknown char is 96 (UNK_TOKEN)
+        assert_eq!(vocabulary.encode_char('\u{2603}'), UNK_TOKEN);
+    }
+}
