@@ -14,6 +14,7 @@ pub struct Config {
     pub src: String,
     pub excludes: Vec<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     output: Output,
 }
 
