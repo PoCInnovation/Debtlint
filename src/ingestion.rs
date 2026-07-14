@@ -1,10 +1,9 @@
+use crate::config::Config;
+use debtlint::tokenizer::SourceFile;
 use std::fs::{self, File, ReadDir};
 use std::io::{self, BufRead};
-use std::path::PathBuf;
-use crate::config::Config;
 use std::path::Path;
-use debtlint::tokenizer::{SourceFile};
-
+use std::path::PathBuf;
 
 const COMMENT_CHARS: [&str; 2] = ["#", "//"];
 
@@ -47,8 +46,7 @@ fn is_path_excluded(path: &str, excluded_paths: &Vec<String>) -> bool {
 }
 
 fn is_inside_folder(path: &Path, folder: &Path) -> bool {
-    let (Ok(canonical_path), Ok(canonical_folder)) =
-        (path.canonicalize(), folder.canonicalize())
+    let (Ok(canonical_path), Ok(canonical_folder)) = (path.canonicalize(), folder.canonicalize())
     else {
         return false;
     };
@@ -67,7 +65,7 @@ fn collect_source_files(src: String, excluded: Vec<String>) -> Vec<SourceFile> {
             if is_path_excluded(path, &excluded) {
                 return;
             }
-            if !is_inside_folder(Path::new(path), Path::new(&src)){
+            if !is_inside_folder(Path::new(path), Path::new(&src)) {
                 return;
             }
             let Some(source_file) = get_file(path) else {
