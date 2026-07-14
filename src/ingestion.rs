@@ -21,7 +21,7 @@ fn get_file(path: &str) -> Option<SourceFile> {
     }
     Some(SourceFile {
         path: PathBuf::from(path),
-        content: content,
+        content,
     })
 }
 
@@ -38,7 +38,7 @@ fn get_excluded_paths(excluded: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-fn is_path_excluded(path: &str, excluded_paths: &Vec<String>) -> bool {
+fn is_path_excluded(path: &str, excluded_paths: &[String]) -> bool {
     let Ok(absolute) = PathBuf::from(path).canonicalize() else {
         return false;
     };
@@ -96,7 +96,7 @@ fn collect_source_files_fallback(
         if is_path_excluded(file_path_str, excluded_paths) {
             continue;
         };
-        if file_type.is_dir() && file_name_str.chars().next().unwrap() != '.' {
+        if file_type.is_dir() && !file_name_str.starts_with('.') {
             let Ok(dir) = entry.path().read_dir() else {
                 continue;
             };
