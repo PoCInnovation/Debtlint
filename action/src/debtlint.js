@@ -38,7 +38,7 @@ const execCommand = (cmd, args = []) => {
   });
 };
 
-const rawOutput = await runCommand('cargo', ['run', 'main.rs']);
+const rawOutput = await execCommand('cargo', ['run', 'main.rs']);
 const diagnostic = diagnosticSchema.parse(JSON.parse(rawOutput));
 
 const range = diagnostic.ranges[0];
