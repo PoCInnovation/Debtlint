@@ -5,8 +5,8 @@ use clap::Parser;
 use cli::Args;
 
 fn main() {
-    let args = Args::parse();
-    if let Err(err) = debug_run::run(&args) {
+    let _ = Args::parse();
+    if let Err(err) = debug_run::run_linter() {
         eprintln!("{err}");
         std::process::exit(1);
     }
