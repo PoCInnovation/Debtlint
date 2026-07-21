@@ -1,0 +1,17 @@
+name: Check duplication
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+    debtlint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Run debtlint
+              uses: ./action
+              with:
+               files: "src"

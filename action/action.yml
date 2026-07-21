@@ -1,0 +1,30 @@
+name: debtlint
+description: Identifies repeated or near-duplicate code segments across a codebase.
+author: poc-innovation
+branding:
+  icon: "check-circle"
+  color: "green"
+
+inputs:
+  files:
+    required: false
+
+runs:
+  using: composite
+  steps:
+
+    - name: Install debtlint
+      shell: sh
+      run: cargo install debtlint
+    
+    - name: Install dependencies
+      shell: sh
+      run: npm install
+      working-directory: ./action
+
+
+    - name: Run debtlint
+      shell: sh
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: node ${{ github.action_path }}/index.js

@@ -1,9 +1,21 @@
 use debtlint::in_out::{read_corpus, save_vocabulary, write_encoded_sequence_json};
 use debtlint::pipeline::{BpeConfig, run_bpe};
 use debtlint::tokenizer::{BASE_VOCAB_SIZE, SourceFile, decode_sequence};
+use debtlint::linter::{get_duplicated};
 
 use crate::cli::Args;
+use serde_json;
 
+
+pub fn run_linter() -> std::io::Result<()> {
+    let diagnostic = get_duplicated();
+    match serde_json::to_string(&diagnostic) {
+        Ok(data) => { println!("{}", data); Ok(()) },
+        Err(err) => { println!("Error: {}", err); Err(std::io::Error::new(std::io::ErrorKind::Other, err))  }
+    }
+}
+
+#[allow(dead_code)]
 pub fn run(args: &Args) -> std::io::Result<()> {
     let content = read_corpus(&args.file)?;
     let files = vec![SourceFile {
@@ -30,6 +42,7 @@ pub fn run(args: &Args) -> std::io::Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn print_stats(result: &debtlint::tokenizer::BpeTrainingResult, content: &str, args: &Args) {
     let initial_tokens = result.initial_token_count;
     let encoded_tokens = result.encoded_token_count();
@@ -59,6 +72,7 @@ fn print_stats(result: &debtlint::tokenizer::BpeTrainingResult, content: &str, a
     );
 }
 
+#[allow(dead_code)]
 fn verify_decode_roundtrip(
     args: &Args,
     files: &[SourceFile],
