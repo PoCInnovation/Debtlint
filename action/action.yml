@@ -17,6 +17,10 @@ runs:
       shell: sh
       run: cargo install debtlint
     
+    - name: Install dependencies
+      shell: sh
+      run: npm install
+
     - name: Run debtlint
       shell: sh
       env:
