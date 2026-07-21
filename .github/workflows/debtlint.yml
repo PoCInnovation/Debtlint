@@ -1,7 +1,8 @@
 name: Check duplication
 
 on:
-    pull_request:
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
     debtlint:
