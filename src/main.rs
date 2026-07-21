@@ -1,8 +1,12 @@
 mod cli;
-mod debug_run;
+mod config;
+mod ingestion;
 
 use clap::Parser;
 use cli::Args;
+use config::get_config;
+use debtlint::pipeline::{BpeConfig, run_bpe};
+use ingestion::ingest_codebase;
 
 fn main() {
     let _ = Args::parse();
