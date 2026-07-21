@@ -4,11 +4,15 @@ use debtlint::tokenizer::{BASE_VOCAB_SIZE, SourceFile, decode_sequence};
 use debtlint::linter::{get_duplicated};
 
 use crate::cli::Args;
+use serde_json;
 
 
 pub fn run_linter() -> std::io::Result<()> {
-    println!("{:?}", get_duplicated());
-    Ok(())
+    let diagnostic = get_duplicated();
+    match serde_json::to_string(&diagnostic) {
+        Ok(data) => { println!("{}", data); Ok(()) },
+        Err(err) => { println!("Error: {}", err); Err(std::io::Error::new(std::io::ErrorKind::Other, err))  }
+    }
 }
 
 #[allow(dead_code)]

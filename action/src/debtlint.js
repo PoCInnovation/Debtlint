@@ -16,8 +16,8 @@ const octokit = new Octokit();
 const execCommand = (cmd, args = []) => {
   return new Promise((resolve, reject) => {
     const process = spawn(cmd, args);
-    let output;
-    let errorOutput;
+    let output = ""
+    let errorOutput = ""
 
     process.stdout.on('data', (data) => {
       output += data.toString();
