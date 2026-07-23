@@ -8,8 +8,8 @@ use std::path::PathBuf;
     about = "Technical debt detection via BPE-inspired pattern analysis"
 )]
 pub struct Args {
-    #[arg(value_name = "FILE")]
-    pub file: PathBuf,
+    // #[arg(value_name = "FILE")]
+    // pub file: PathBuf,
     #[arg(long, default_value_t = 1000)]
     pub vocab_size: u32,
     #[arg(long, default_value_t = 2)]
