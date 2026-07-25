@@ -14,28 +14,27 @@ const octokit = new Octokit();
  * @returns {Promise<string>}
  */
 const execCommand = (cmd, args = []) => {
-  return new Promise((resolve, reject) => {
-    const process = spawn(cmd, args);
-    let output = ""
-    let errorOutput = ""
+    return new Promise((resolve, reject) => {
+        const process = spawn(cmd, args);
+        let output = ""
+        let errorOutput = ""
+        
+        process.stdout.on('data', (data) => {
+            output += data.toString();
+        });
 
-    process.stdout.on('data', (data) => {
-      output += data.toString();
+        process.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+        });
+        
+        process.on('close', (code) => {
+            if (code !== 0) {
+                return reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
+            }
+        resolve(output);
+        });
+        process.on('error', reject);
     });
-
-    process.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
-
-    process.on('close', (code) => {
-      if (code !== 0) {
-        return reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
-      }
-      resolve(output);
-    });
-
-    process.on('error', reject);
-  });
 };
 
 const rawOutput = await execCommand('cargo', ['run', 'main.rs']);
