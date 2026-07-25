@@ -1,4 +1,6 @@
 mod cli;
+mod config;
+mod ingestion;
 mod debug_run;
 
 use clap::Parser;

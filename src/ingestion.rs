@@ -1,13 +1,9 @@
+use crate::config::Config;
+use debtlint::tokenizer::SourceFile;
 use std::fs::{self, File, ReadDir};
 use std::io::{self, BufRead};
-use std::path::PathBuf;
-use crate::config::Config;
 use std::path::Path;
-
-pub struct SourceFile {
-    pub path: PathBuf,
-    pub content: String,
-}
+use std::path::PathBuf;
 
 const COMMENT_CHARS: [&str; 2] = ["#", "//"];
 
@@ -25,7 +21,7 @@ fn get_file(path: &str) -> Option<SourceFile> {
     }
     Some(SourceFile {
         path: PathBuf::from(path),
-        content: content,
+        content,
     })
 }
 
@@ -42,7 +38,7 @@ fn get_excluded_paths(excluded: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-fn is_path_excluded(path: &str, excluded_paths: &Vec<String>) -> bool {
+fn is_path_excluded(path: &str, excluded_paths: &[String]) -> bool {
     let Ok(absolute) = PathBuf::from(path).canonicalize() else {
         return false;
     };
@@ -50,8 +46,7 @@ fn is_path_excluded(path: &str, excluded_paths: &Vec<String>) -> bool {
 }
 
 fn is_inside_folder(path: &Path, folder: &Path) -> bool {
-    let (Ok(canonical_path), Ok(canonical_folder)) =
-        (path.canonicalize(), folder.canonicalize())
+    let (Ok(canonical_path), Ok(canonical_folder)) = (path.canonicalize(), folder.canonicalize())
     else {
         return false;
     };
@@ -70,7 +65,7 @@ fn collect_source_files(src: String, excluded: Vec<String>) -> Vec<SourceFile> {
             if is_path_excluded(path, &excluded) {
                 return;
             }
-            if !is_inside_folder(Path::new(path), Path::new(&src)){
+            if !is_inside_folder(Path::new(path), Path::new(&src)) {
                 return;
             }
             let Some(source_file) = get_file(path) else {
@@ -101,7 +96,7 @@ fn collect_source_files_fallback(
         if is_path_excluded(file_path_str, excluded_paths) {
             continue;
         };
-        if file_type.is_dir() && file_name_str.chars().next().unwrap() != '.' {
+        if file_type.is_dir() && !file_name_str.starts_with('.') {
             let Ok(dir) = entry.path().read_dir() else {
                 continue;
             };

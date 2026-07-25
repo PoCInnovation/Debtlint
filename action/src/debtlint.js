@@ -8,7 +8,7 @@ import { diagnosticSchema } from './schemas.js';
 const octokit = new Octokit();
 
 /**
- * Execute a command in a child process
+ * Execute a command in a child process     te
  * @param {string} cmd
  * @param {string[]} args
  * @returns {Promise<string>}
