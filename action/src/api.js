@@ -13,6 +13,9 @@ import { diagnosticSchema } from './schemas.js';
  */
 export async function createComment(octokit, diagnostic, context)
 {
+    for (const range of diagnostic.ranges) {
+        console.log(range.start.line);
+    }
     await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', {
       owner: context.repo.owner,
       repo: context.repo.repo,
