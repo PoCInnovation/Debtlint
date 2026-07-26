@@ -4,6 +4,7 @@ import { Octokit } from '@octokit/action';
 
 import { execCommand } from "./src/executor.js"
 import { createComment } from "./src/api.js";
+import { diagnosticSchema } from './src/schemas.js';
 
 async function run() {
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
