@@ -1,3 +1,19 @@
-import { run } from './src/debtlint.js';
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { Octokit } from '@octokit/action';
 
-run()
+import { execCommand } from "./src/executor.js"
+import { createComment } from "./src/api.js";
+
+async function run() {
+    const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
+    const octokit = github.getOctokit(GITHUB_TOKEN);
+    const { context = {} } = github;
+
+    const rawOutput = await execCommand('cargo', ['run', 'main.rs']);
+    console.log(rawOutput)
+    const diagnostic = diagnosticSchema.parse(JSON.parse(rawOutput));
+    await createComment(octokit, diagnostic, context)
+}
+
+run().catch(console.error);
