@@ -8,7 +8,7 @@ import { diagnosticSchema } from './schemas.js';
  * @param {string[]} args
  * @returns {Promise<string>}
  */
-const execCommand = (cmd, args = []) => {
+export const execCommand = (cmd, args = []) => {
     return new Promise((resolve, reject) => {
         const process = spawn(cmd, args);
         let output = ""
