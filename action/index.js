@@ -10,8 +10,8 @@ async function run() {
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
     const octokit = github.getOctokit(GITHUB_TOKEN);
     const { context = {} } = github;
-
     const rawOutput = await execCommand('cargo', ['run', 'main.rs']);
+
     console.log(rawOutput)
     const diagnostic = diagnosticSchema.parse(JSON.parse(rawOutput));
     await createComment(octokit, diagnostic, context)

@@ -24,5 +24,5 @@ export const diagnosticSchema = z.object({
     severity: z.string(),
     code: z.number().min(0) ,
     ranges: z.array(rangeSchema),
-    codeDescription: z.string().optional(),
+    codeDescription: z.string(),
 })
