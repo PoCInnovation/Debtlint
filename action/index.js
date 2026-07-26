@@ -1,1 +1,3 @@
-import './src/debtlint.js';
+import { run } from './src/debtlint.js';
+
+run()
