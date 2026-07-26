@@ -16,4 +16,4 @@ async function run() {
     await createComment(octokit, diagnostic, context)
 }
 
-run().catch(console.error);
+run()
