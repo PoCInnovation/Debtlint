@@ -21,8 +21,8 @@ const rangeSchema = z.object({
 * @typedef {z.infer<typeof diagnosticSchema>} Diagnostic
 */ 
 export const diagnosticSchema = z.object({
-    severity: z.string(),
     code: z.number().min(0) ,
+    severity: z.string(),
     ranges: z.array(rangeSchema),
     code_description: z.string(),
 })

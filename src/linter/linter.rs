@@ -2,8 +2,8 @@ use super::diagnostic::{Diagnostic, Range, Position};
 
 pub fn get_duplicated() -> Diagnostic {
     Diagnostic {
-        severity: String::from("low"),
         code: 1,
+        severity: String::from("low"),
         ranges: vec![
             Range {
                 start: Position { source: "src/ingestion.rs".to_string(), line: 10, character: 1 },
