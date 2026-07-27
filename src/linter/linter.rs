@@ -2,13 +2,18 @@ use super::diagnostic::{Diagnostic, Range, Position};
 
 pub fn get_duplicated() -> Diagnostic {
     Diagnostic {
-        source: String::from("src/main.rs"),
         severity: String::from("low"),
         code: 1,
-        ranges: vec![Range {
-            start: Position { line: 8, character: 8 },
-            end: Position { line: 8, character: 12 },
-        }],
-        code_description: String::from("No typing"),
+        ranges: vec![
+            Range {
+                start: Position { source: "src/ingestion.rs".to_string(), line: 10, character: 1 },
+                end: Position { source: "src/ingestion.rs".to_string(), line: 26, character: 1 },
+            },
+            Range {
+                start: Position { source: "src/pipeline.rs".to_string(), line: 12, character: 1 },
+                end: Position { source: "src/pipeline.rs".to_string(), line: 23, character: 1 }
+            }
+        ],
+        code_description: String::from("Duplicate"),
     }
 }

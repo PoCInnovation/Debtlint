@@ -4,6 +4,7 @@ use serde::Serialize;
 
 #[derive(Serialize, Debug)]
 pub struct Position {
+    pub source: String,
     pub line: u32,
     pub character: u32 
 }
@@ -16,7 +17,6 @@ pub struct Range {
 
 #[derive(Serialize, Debug)]
 pub struct Diagnostic {
-    pub source: String,
     pub severity: String,
     pub code: u16,
     pub ranges: Vec<Range>,

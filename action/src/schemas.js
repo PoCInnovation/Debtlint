@@ -4,6 +4,7 @@ import { z } from "zod";
 * @typedef {z.infer<typeof positionSchema>} Position
 */ 
 const positionSchema = z.object({
+  source: z.string(),
   line: z.number().min(0),
   character: z.number().min(0),
 });
@@ -20,7 +21,6 @@ const rangeSchema = z.object({
 * @typedef {z.infer<typeof diagnosticSchema>} Diagnostic
 */ 
 export const diagnosticSchema = z.object({
-    source: z.string(),
     severity: z.string(),
     code: z.number().min(0) ,
     ranges: z.array(rangeSchema),

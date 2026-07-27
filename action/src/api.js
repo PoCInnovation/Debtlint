@@ -20,7 +20,7 @@ export async function createComment(octokit, diagnostic, context)
             pull_number: context.payload.pull_request.number,
             body: diagnostic.code_description,
             commit_id: context.payload.pull_request.head.sha,
-            path: diagnostic.source,
+            path: range.start.source,
             start_line: range.start.line,
             start_side: 'RIGHT',
             line: range.end.line,
