@@ -33,3 +33,17 @@ pub fn get_duplicated() -> Diagnostic {
         code_description: String::from("Duplicate"),
     }
 }
+
+pub fn run_linter() -> std::io::Result<()> {
+    let diagnostic = get_duplicated();
+    match serde_json::to_string(&diagnostic) {
+        Ok(data) => {
+            println!("{}", data);
+            Ok(())
+        }
+        Err(err) => {
+            println!("Error: {}", err);
+            Err(std::io::Error::other(err))
+        }
+    }
+}

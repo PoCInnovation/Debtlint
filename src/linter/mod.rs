@@ -1,5 +1,5 @@
 mod diagnostic;
-mod linter;
+mod runner;
 
 pub use diagnostic::Diagnostic;
-pub use linter::get_duplicated;
+pub use runner::run_linter;
