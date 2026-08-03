@@ -1,7 +1,7 @@
 mod cli;
 mod config;
-mod ingestion;
 mod debug_run;
+mod ingestion;
 
 use clap::Parser;
 use cli::Args;
