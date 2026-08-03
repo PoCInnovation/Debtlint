@@ -7,12 +7,12 @@ pub fn get_duplicated() -> Diagnostic {
         ranges: vec![
             Range {
                 start: Position {
-                    source: "src/linter/linter.rs".to_string(),
+                    source: "src/linter/runner.rs".to_string(),
                     line: 10,
                     character: 1,
                 },
                 end: Position {
-                    source: "src/linter/linter.rs".to_string(),
+                    source: "src/linter/runner.rs".to_string(),
                     line: 19,
                     character: 1,
                 },
