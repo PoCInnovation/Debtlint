@@ -1,21 +1,31 @@
 ---
 name: debtlint
 description: >
-  debtlint scans a codebase and returns a JSON list of duplicate code blocks
-  as objects with file, start_line, and end_line. Returns an empty JSON array
-  if no duplicates are found.
-  Use after every code generation.
+  Analyze a codebase with debtlint to detect duplicated code blocks.
+  Use after generating or modifying code to identify technical debt.
 license: Apache-2.0
-
-compatibility: Require debtlint package. Install it with ```cargo install debtlint```.
 allowed-tools: Bash(cargo install debtlint), Bash(debtlint:*)
 metadata:
-  author: POC
+  author: POC Innovation
   version: "0.1.0"
   website: "https://poc-innovation.fr"
 ---
 
 # Debtlint
+
+## Overview
+
+debtlint scans a codebase and returns a JSON list of duplicate code blocks
+as objects with file, start_line, and end_line. Returns an empty JSON array
+if no duplicates are found.
+
+## Installation
+
+```sh
+cargo install debtlint
+cargo update debtlint
+
+```
 
 ## When to Apply
 
@@ -25,6 +35,25 @@ Always apply these guidelines every time you generate code:
 - Repeat until the JSON array is empty or after 3 iterations.
 - If duplicates persist after 3 iterations, stop and report remaining issues to the user.
 - Use debtlint with the current directory(.) unless user specifies another directory.
+
+
+## Usage
+
+If a **.vocabulary** file exist:
+
+```sh
+
+debtlint --load-vocab .
+
+```
+
+Else run debtlint and save to vocabulary:
+
+```sh
+
+debtlint --save-vocab . .vocabulary
+
+```
 
 ## Output
 
@@ -44,15 +73,5 @@ An empty result should be:
 
 ```json
 []
+
 ```
-
-If the command fails or `debtlint` is missing, install it with:
-
-```bash
-cargo install debtlint
-```
-
-## Usage
-
-Run the installed `debtlint` scanner in the current directory and inspect the JSON
-output.
