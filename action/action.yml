@@ -20,7 +20,7 @@ runs:
     
     - name: Install dependencies
       shell: sh
-      run: npm install
+      run: npm install tsx
       working-directory: ./action
 
 
@@ -28,4 +28,4 @@ runs:
       shell: sh
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: node ${{ github.action_path }}/index.js
+      run: tsx ${{ github.action_path }}/index.ts

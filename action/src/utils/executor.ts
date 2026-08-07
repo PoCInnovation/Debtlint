@@ -1,28 +1,20 @@
 import { spawn } from 'child_process';
 
-import { diagnosticSchema } from './schemas.js';
-
-/**
- * Execute a command in a child process
- * @param {string} cmd
- * @param {string[]} args
- * @returns {Promise<string>}
- */
-export const execCommand = (cmd, args = []) => {
+export const execCommand = (cmd: string, args: string[] = []): Promise<string> => {
     return new Promise((resolve, reject) => {
         const process = spawn(cmd, args);
-        let output = ""
-        let errorOutput = ""
+        let output: string = ""
+        let errorOutput: string = ""
         
-        process.stdout.on('data', (data) => {
+        process.stdout.on('data', (data: Buffer) => {
             output += data.toString();
         });
 
-        process.stderr.on('data', (data) => {
+        process.stderr.on('data', (data: Buffer) => {
             errorOutput += data.toString();
         });
         
-        process.on('close', (code) => {
+        process.on('close', (code: number) => {
             if (code !== 0) {
                 return reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
             }
