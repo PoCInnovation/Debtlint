@@ -13,19 +13,22 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Setup nu shell
+      uses: hustcer/setup-nu@v3
+      with:
+        version: 0.114.1
 
     - name: Install debtlint
-      shell: sh
+      shell: nu {0}
       run: cargo install debtlint
     
     - name: Install dependencies
-      shell: sh
-      run: npm install tsx
+      shell: nu {0}
+      run: npm install
       working-directory: ./action
 
-
     - name: Run debtlint
-      shell: sh
+      shell: nu {0}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: tsx ${{ github.action_path }}/index.ts
+      run: npx tsx ${{ github.action_path }}/index.ts
