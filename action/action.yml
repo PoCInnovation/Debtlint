@@ -31,4 +31,4 @@ runs:
       shell: nu {0}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: npx tsx ${{ github.action_path }}/index.ts
+      run: npx tsx ${{ github.action_path }}/main.ts
