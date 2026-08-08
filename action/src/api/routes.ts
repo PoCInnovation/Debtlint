@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { getOctokit, context } from '@actions/github';
 
-import { Diagnostic } from '../typings/diagnostic';
+import { Diagnostic } from '@/typings/diagnostic';
 import { PullRequestContext, Octokit } from '../typings/github';
 
 
