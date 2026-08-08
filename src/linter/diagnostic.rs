@@ -18,5 +18,5 @@ pub struct Diagnostic {
     pub severity: String,
     pub code: u16,
     pub ranges: Vec<Range>,
-    pub code_description: String,
+    pub description: String,
 }

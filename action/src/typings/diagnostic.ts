@@ -12,10 +12,10 @@ const rangeSchema = z.object({
 });
 
 export const diagnosticSchema = z.object({
-    code: z.number().min(0) ,
+    code: z.number().min(0),
     severity: z.string(),
     ranges: z.array(rangeSchema),
-    code_description: z.string(),
+    description: z.string(),
 })
 
 export type Diagnostic = z.infer<typeof diagnosticSchema>

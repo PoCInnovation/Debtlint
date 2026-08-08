@@ -31,7 +31,7 @@ pub fn get_duplicated() -> Vec<Diagnostic> {
                     },
                 },
             ],
-            code_description: String::from("Duplicate"),
+            description: String::from("Duplicate"),
         },
         Diagnostic {
             code: 2,
@@ -62,7 +62,7 @@ pub fn get_duplicated() -> Vec<Diagnostic> {
                     },
                 },
             ],
-            code_description: String::from("Duplicate code"),
+            description: String::from("Duplicate code"),
         },
     ]
 }
