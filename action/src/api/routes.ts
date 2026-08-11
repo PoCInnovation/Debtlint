@@ -1,24 +1,27 @@
-import { readFile } from 'fs';
+import { readFile } from "fs/promises";
 
 import { Diagnostic, Fragment } from '@/typings/diagnostic';
 import { PullRequestContext, Octokit } from '@/typings/github';
 
-async function getSuggestion(diagnostic: Diagnostic): Promise<string> {
-    const workspace: string = process.env.GITHUB_WORKSPACE!;
-    let content: string = "<!-- debtlint -->\n## Debtlint suggestion\n"
 
-    console.log("Workspace: ", workspace)
+async function getSuggestion(diagnostic: Diagnostic): Promise<string> {
+    let content = "<!-- debtlint -->\n## Debtlint suggestion\n";
+    content += `### ${diagnostic.description}\n`
+
     for (const range of diagnostic.ranges) {
-        readFile(range.source, 'utf-8', (err: NodeJS.ErrnoException | null, data: string) => {
-            if (err) console.error(err);
-            let fragment: string = "```" + range.source
-            const lines: string[] = data.split("/\r?\n/").slice(range.start.line, range.end.line)
+        try {
+            const data = await readFile(range.source, "utf-8");
+            let fragment = "```" + range.source.split(".").pop() + "\n";
+            const lines = data.split(/\r?\n/).slice(range.start.line, range.end.line);
             for (const line of lines) {
-                fragment += line
+                fragment += line + "\n";
             }
-            content += (fragment + "```")
-        });
+            content += fragment + "```\n";
+        } catch (err) {
+            console.error(`Error reading ${range.source}:`, err);
+        }
     }
+    console.log("Content:", content);
     return content;
 }
 
