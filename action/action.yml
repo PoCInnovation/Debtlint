@@ -10,6 +10,7 @@ inputs:
     description: "File passed to the program."
     required: false
 
+
 runs:
   using: composite
   steps:
@@ -17,7 +18,12 @@ runs:
       uses: hustcer/setup-nu@v3
       with:
         version: 0.114.1
-
+    
+    - name: Add .cargo/bin to PATH
+      shell: nu {0}
+      run: |
+        $"($env.HOME)/.cargo/bin" | save --append $env.GITHUB_PATH
+    
     - name: Install debtlint
       shell: nu {0}
       run: cargo install debtlint
@@ -26,10 +32,9 @@ runs:
       shell: nu {0}
       working-directory: ${{ github.action_path }}
       run: npm install
-
+  
     - name: Run debtlint
       shell: nu {0}
       env:
-        GITHUB_TOKEN: ${{ github.token }}
-      working-directory: ${{ github.action_path }}
-      run: npx tsx ${{ github.action_path }}/main.ts
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+      run: npx tsx --tsconfig action/tsconfig.json ${{ github.action_path }}/main.ts

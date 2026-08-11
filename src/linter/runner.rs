@@ -7,62 +7,58 @@ pub fn get_duplicated() -> Vec<Diagnostic> {
             severity: String::from("low"),
             ranges: vec![
                 Range {
+                    source: "src/linter/runner.rs".to_string(),
                     start: Position {
-                        source: "src/linter/runner.rs".to_string(),
                         line: 10,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/linter/runner.rs".to_string(),
                         line: 19,
                         character: 1,
                     },
                 },
                 Range {
+                    source: "src/debug_run.rs".to_string(),
                     start: Position {
-                        source: "src/debug_run.rs".to_string(),
                         line: 10,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/debug_run.rs".to_string(),
                         line: 16,
                         character: 1,
                     },
                 },
             ],
-            description: String::from("Duplicate"),
+            description: String::from("This code can be refactorised."),
         },
         Diagnostic {
             code: 2,
             severity: String::from("high"),
             ranges: vec![
                 Range {
+                    source: "src/tokenizer/decode.rs".to_string(),
                     start: Position {
-                        source: "src/tokenizer/decode.rs".to_string(),
                         line: 10,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/tokenizer/decode.rs".to_string(),
                         line: 19,
                         character: 1,
                     },
                 },
                 Range {
+                    source: "src/debug_run.rs".to_string(),
                     start: Position {
-                        source: "src/debug_run.rs".to_string(),
                         line: 10,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/debug_run.rs".to_string(),
                         line: 16,
                         character: 1,
                     },
                 },
             ],
-            description: String::from("Duplicate code"),
+            description: String::from("This code is duplicated."),
         },
     ]
 }
