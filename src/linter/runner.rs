@@ -7,26 +7,24 @@ pub fn get_duplicated() -> Vec<Diagnostic> {
             severity: String::from("low"),
             ranges: vec![
                 Range {
+                    source: "src/Core.cpp".to_string(),
                     start: Position {
-                        source: "src/linter/runner.rs".to_string(),
-                        line: 10,
+                        line: 50,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/linter/runner.rs".to_string(),
-                        line: 19,
+                        line: 54,
                         character: 1,
                     },
                 },
                 Range {
+                    source: "src/Kitchen.cpp".to_string(),
                     start: Position {
-                        source: "src/debug_run.rs".to_string(),
-                        line: 10,
+                        line: 31,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/debug_run.rs".to_string(),
-                        line: 16,
+                        line: 64,
                         character: 1,
                     },
                 },
@@ -38,26 +36,13 @@ pub fn get_duplicated() -> Vec<Diagnostic> {
             severity: String::from("high"),
             ranges: vec![
                 Range {
+                    source: "src/Pizza.cpp".to_string(),
                     start: Position {
-                        source: "src/tokenizer/decode.rs".to_string(),
-                        line: 10,
+                        line: 3,
                         character: 1,
                     },
                     end: Position {
-                        source: "src/tokenizer/decode.rs".to_string(),
-                        line: 19,
-                        character: 1,
-                    },
-                },
-                Range {
-                    start: Position {
-                        source: "src/debug_run.rs".to_string(),
-                        line: 10,
-                        character: 1,
-                    },
-                    end: Position {
-                        source: "src/debug_run.rs".to_string(),
-                        line: 16,
+                        line: 8,
                         character: 1,
                     },
                 },

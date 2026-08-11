@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 const positionSchema = z.object({
-  source: z.string(),
   line: z.number().min(0),
   character: z.number().min(0),
 });
 
-const rangeSchema = z.object({
+export const fragmentSchema = z.object({
+  source: z.string(),
   start: positionSchema,
   end: positionSchema,
 });
@@ -14,8 +14,9 @@ const rangeSchema = z.object({
 export const diagnosticSchema = z.object({
     code: z.number().min(0),
     severity: z.string(),
-    ranges: z.array(rangeSchema),
+    ranges: z.array(fragmentSchema),
     description: z.string(),
 })
 
+export type Fragment = z.infer<typeof fragmentSchema>
 export type Diagnostic = z.infer<typeof diagnosticSchema>

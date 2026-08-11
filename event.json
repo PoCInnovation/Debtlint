@@ -1,0 +1,16 @@
+{
+  "pull_request": {
+    "number": 12,
+    "head": {
+      "ref": "test/debtlint-action",
+      "sha": "33048d2b243c75ca17a60276398dd8f419511220"
+    },
+    "base": {
+      "ref": "main",
+      "sha": "bc2e984d32ecb1616d37386cf5c017ac5f5cb7bf"
+    }
+  },
+  "repository": {
+    "full_name": "Rayan-ouer/plazza-mirror"
+  }
+}
