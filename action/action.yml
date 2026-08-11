@@ -18,12 +18,7 @@ runs:
       uses: hustcer/setup-nu@v3
       with:
         version: 0.114.1
-    
-    - name: Add .cargo/bin to PATH
-      shell: nu {0}
-      run: |
-        $"($env.HOME)/.cargo/bin" | save --append $env.GITHUB_PATH
-    
+
     - name: Install debtlint
       shell: nu {0}
       run: cargo install debtlint

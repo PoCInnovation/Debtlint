@@ -21,7 +21,6 @@ async function getSuggestion(diagnostic: Diagnostic): Promise<string> {
             console.error(`Error reading ${range.source}:`, err);
         }
     }
-    console.log("Content:", content);
     return content;
 }
 
@@ -39,18 +38,4 @@ export async function createPullRequestComments(octokit: Octokit, diagnostics: D
 }
 
 async function createThreadComments() {}
-
-//<!-- cpp linter action -->
-//### clang-format suggestion
-//
-//```suggestion
-//        raylib::Vector3 alignToWorldPlane(raylib::Vector3 vector) const;
-//```
-//### clang-tidy diagnostics
-//- function 'alignToWorldPlane' should be marked [[nodiscard]] [[modernize-use-nodiscard](https://clang.llvm.org/extra/clang-tidy/checks/modernize/use-nodiscard.html)]
-//
-//```suggestion
-//        [[nodiscard]] raylib::Vector3 alignToWorldPlane(
-//            raylib::Vector3 vector) const;
-//```
 
