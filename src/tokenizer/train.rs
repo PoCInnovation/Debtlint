@@ -145,3 +145,58 @@ fn train_from_sequences(
         initial_token_count,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use super::*;
+    use crate::tokenizer::decode_sequence;
+    use crate::tokenizer::sequence::text_to_sequence;
+    use crate::tokenizer::vocabulary::{VocabularyEntry};
+
+    fn source_file(name: &str, content: &str) -> SourceFile {
+        SourceFile {
+            path: PathBuf::from(name),
+            content: content.to_string(),
+        }
+    }
+
+    #[test]
+    fn round_trip_sample() {
+        let content = include_str!("../../fixtures/sample.rs"); // get the content of the file
+        let file = vec![source_file("fixtures/sample.rs", content)]; // create the file with the content
+        let result = train_corpus(&file, 500, 2);
+        let decoded = decode_sequence(&result.files[0].sequence, &result.vocabulary);
+        assert_eq!(decoded, content); // verif if afeter train and decode the content is the same
+    }
+
+    #[test]
+    fn cafe_becomes_unk() {
+        let vocabulary = Vocabulary::init_base();
+        let sequence = text_to_sequence("café", &vocabulary);
+        let decoded = decode_sequence(&sequence, &vocabulary);
+        assert_eq!(decoded, "caf\u{FFFD}");// é est bien UNK
+    }
+
+    #[test]
+    fn merges_have_offsets() {
+        let content = include_str!("../../fixtures/sample.rs");
+        let files = vec![source_file("fixtures/sample.rs", content)];
+        let result = train_corpus(&files, 500, 2);
+        assert!(result.merges > 0);
+
+        for entry in &result.vocabulary.entries {
+            let VocabularyEntry::Merge { occurrences, .. } = entry else {
+                continue;
+            };
+            assert!(
+                !occurrences.is_empty(),
+                "each merge must list at least one file"
+            );
+            assert!(
+                occurrences.iter().any(|file| !file.offsets.is_empty()),
+                "each merge must record at least one offset"
+            );
+        }
+    }
+}
