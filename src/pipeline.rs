@@ -1,5 +1,6 @@
 use crate::in_out::load_vocabulary;
 use crate::tokenizer::{BpeTrainingResult, SourceFile, encode_corpus, train_corpus};
+
 use std::path::Path;
 
 pub struct BpeConfig {

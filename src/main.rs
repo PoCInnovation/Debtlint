@@ -5,6 +5,7 @@ mod ingestion;
 use clap::Parser;
 use cli::Args;
 use config::get_config;
+use debtlint::linter::run_linter;
 use debtlint::pipeline::{BpeConfig, run_bpe};
 use ingestion::ingest_codebase;
 
@@ -21,5 +22,6 @@ fn main() -> std::io::Result<()> {
         },
         args.load_vocab.as_deref(),
     )?;
+    let _ = run_linter();
     Ok(())
 }
