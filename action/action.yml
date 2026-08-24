@@ -25,7 +25,7 @@ runs:
       uses: hustcer/setup-nu@v3
       with:
         version: 0.114.1
-  
+
     - name: Install debtlint
       shell: nu {0}
       run: cargo install debtlint
