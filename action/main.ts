@@ -12,6 +12,7 @@ async function run() {
     const octokit = getOctokit(GITHUB_TOKEN);
     const eventContext = parsePullRequestContext(context)
 
+    console.log(context)
     const rawOutput = await execCommand('cargo', ['run', 'main.rs']);
     const diagnostics: Diagnostic[] = z.array(diagnosticSchema).parse(JSON.parse(rawOutput));
     await createPullRequestComments(octokit, diagnostics, eventContext)

@@ -6,10 +6,17 @@ branding:
   color: "green"
 
 inputs:
-  files:
-    description: "File passed to the program."
+  config-path:
+    description: "Debtlint configuration file."
     required: false
-
+  
+  vocab-path:
+    description: "Debtlint vocabulary. If speficied Debtlint will run with the ```--load-vocab``` flag."
+    required: false
+  
+  extensions:
+    description: "The file extensions to run Debtlint against. This is a comma-separated string."
+    required: false
 
 runs:
   using: composite
@@ -18,7 +25,7 @@ runs:
       uses: hustcer/setup-nu@v3
       with:
         version: 0.114.1
-
+  
     - name: Install debtlint
       shell: nu {0}
       run: cargo install debtlint
