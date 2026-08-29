@@ -1,4 +1,5 @@
 use clap::Parser;
+use debtlint::pipeline::{BpeConfig, PipelineConfig, VocabularySource};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -23,4 +24,24 @@ pub struct Args {
     /// load a vocabulary from json and skip bpe training
     #[arg(long, value_name = "PATH", conflicts_with = "save_vocab")]
     pub load_vocab: Option<PathBuf>,
+}
+
+impl Args {
+    pub fn get_pipeline_config(&self) -> PipelineConfig {
+        let source: VocabularySource = match &self.load_vocab {
+            Some(path) => VocabularySource::Load(path.clone()),
+            None => VocabularySource::Train(self.save_vocab.clone()),
+        };
+        PipelineConfig {
+            source,
+            output_encoded: self.output_encoded.clone(),
+        }
+    }
+
+    pub fn get_bpe_config(&self) -> BpeConfig {
+        BpeConfig {
+            vocab_size: self.vocab_size,
+            min_frequency: self.min_frequency,
+        }
+    }
 }

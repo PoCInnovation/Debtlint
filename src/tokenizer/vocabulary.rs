@@ -21,7 +21,7 @@ pub const BASE_ALPHABET: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 pub const BASE_VOCAB_SIZE: u32 = 97; // size of the base alphabet
 pub const UNK_TOKEN: Token = BASE_VOCAB_SIZE - 1; // token for unknown characters
 
-#[derive(Clone, Serialize, Deserialize)] // serialize and deserialize the file occurrences
+#[derive(Clone, Serialize, Deserialize, Debug)] // serialize and deserialize the file occurrences
 pub struct FileOccurrences {
     pub path: PathBuf,
     pub offsets: Vec<usize>,
@@ -40,7 +40,7 @@ impl FileOccurrences {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum VocabularyEntry {
     // enum to manage the vocabulary entrie
     Symbol(char),
@@ -76,6 +76,7 @@ impl VocabularyEntry {
     }
 }
 
+#[derive(Debug)]
 pub struct Vocabulary {
     pub entries: Vec<VocabularyEntry>, // vector of all vocab letter and pair
     char_to_id: HashMap<char, Token>,  // hashmap to map the character to the token
