@@ -6,10 +6,7 @@ use crate::cli::Args;
 
 pub fn run(args: &Args) -> std::io::Result<()> {
     let content = read_corpus(&args.file)?;
-    let files = vec![SourceFile {
-        path: args.file.clone(),
-        content: content.clone(),
-    }];
+    let files = vec![SourceFile::new(args.file.clone(), content.clone())];
     let result = run_bpe(
         &files,
         BpeConfig {

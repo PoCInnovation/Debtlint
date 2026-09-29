@@ -1,28 +1,12 @@
 use crate::config::Config;
 use debtlint::tokenizer::SourceFile;
-use std::fs::{self, File, ReadDir};
-use std::io::{self, BufRead};
+use std::fs::{self, ReadDir};
 use std::path::Path;
 use std::path::PathBuf;
 
-const COMMENT_CHARS: [&str; 2] = ["#", "//"];
-
 fn get_file(path: &str) -> Option<SourceFile> {
-    let file = File::open(path).ok()?;
-    let reader = io::BufReader::new(file);
-    let mut content = String::from("");
-    for l in reader.lines() {
-        let line = l.ok()?;
-        if COMMENT_CHARS.iter().any(|c| line.trim().starts_with(c)) {
-            continue;
-        };
-        let normalized = line.split_whitespace().collect::<Vec<_>>().join(" ");
-        content += &normalized;
-    }
-    Some(SourceFile {
-        path: PathBuf::from(path),
-        content,
-    })
+    let text = fs::read_to_string(path).ok()?;
+    Some(SourceFile::from_text(PathBuf::from(path), &text))
 }
 
 fn get_excluded_paths(excluded: Vec<String>) -> Vec<String> {

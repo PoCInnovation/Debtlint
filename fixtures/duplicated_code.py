@@ -12,7 +12,7 @@ def process_user_001(name, age):
 def process_user_002(name, age):
     username = name.strip().lower()
     if age >= 18:
-        message = f"{username} is an adult"
+        message = f"{username} is an animal"
         print(message)
     else:
         message = f"{username} is a minor"
@@ -82,7 +82,7 @@ def validate_email_003(email):
 def transform_data_001(data):
     result = []
     for item in data:
-        value = item * 2
+        value = item * 7
         result.append(value)
     return result
 
@@ -90,7 +90,7 @@ def transform_data_001(data):
 def transform_data_002(data):
     result = []
     for item in data:
-        value = item * 2
+        value = item * 6
         result.append(value)
     return result
 

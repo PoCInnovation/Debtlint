@@ -90,7 +90,11 @@ pub fn winnow(tokens: &[Token], k: usize, w: usize) -> Vec<Fingerprint> {
 /// Signature de chaque fichier du corpus encodé par le BPE.
 /// Le Winnowing est appliqué fichier par fichier : un shingle ne traverse jamais
 /// la frontière entre deux fichiers.
-pub fn winnow_corpus(result: &BpeTrainingResult, k: usize, w: usize) -> Vec<(PathBuf, Vec<Fingerprint>)> {
+pub fn winnow_corpus(
+    result: &BpeTrainingResult,
+    k: usize,
+    w: usize,
+) -> Vec<(PathBuf, Vec<Fingerprint>)> {
     result
         .files
         .iter()

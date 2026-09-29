@@ -21,6 +21,15 @@ pub struct Args {
     /// save the trained vocabulary in json file
     #[arg(long, value_name = "PATH")]
     pub save_vocab: Option<PathBuf>,
+    /// shingle size in tokens (Winnowing)
+    #[arg(long, default_value_t = 4)]
+    pub k: usize,
+    /// sliding window size in shingles (Winnowing); duplicates of at least k + w - 1 tokens are always found
+    #[arg(long, default_value_t = 4)]
+    pub w: usize,
+    /// minimum length in tokens of a reported duplicated block
+    #[arg(long, default_value_t = 8)]
+    pub min_tokens: usize,
     /// load a vocabulary from json and skip bpe training
     #[arg(long, value_name = "PATH", conflicts_with = "save_vocab")]
     pub load_vocab: Option<PathBuf>,
