@@ -13,7 +13,11 @@ fn main() -> std::io::Result<()> {
     let cfg = get_config();
     let files = ingest_codebase(cfg);
 
-    let _ = run_bpe(&files,
+    let result = run_bpe(&files,
         args.get_bpe_config(), args.get_pipeline_config())?;
+
+    for d in debtlint::duplication::detect_duplicates(&result, &Default::default()) {
+        println!("{}:{:?} ≈ {}:{:?}", d.a.path.display(), d.a.chars, d.b.path.display(), d.b.chars);
+    }
     Ok(())
 }
