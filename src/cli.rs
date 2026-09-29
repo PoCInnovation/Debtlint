@@ -11,7 +11,7 @@ use std::path::PathBuf;
 pub struct Args {
     #[arg(value_name = "FILE")]
     pub file: PathBuf,
-    #[arg(long, default_value_t = 1000)]
+    #[arg(long, default_value_t = 300)]
     pub vocab_size: u32,
     #[arg(long, default_value_t = 2)]
     pub min_frequency: usize,
@@ -28,7 +28,7 @@ pub struct Args {
     #[arg(long, default_value_t = 4)]
     pub window_size: usize,
     /// minimum length in tokens of a reported duplicated block
-    #[arg(long, default_value_t = 8)]
+    #[arg(long, default_value_t = 20)]
     pub min_tokens: usize,
     /// load a vocabulary from json and skip bpe training
     #[arg(long, value_name = "PATH", conflicts_with = "save_vocab")]
