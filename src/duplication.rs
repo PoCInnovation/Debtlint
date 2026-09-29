@@ -75,7 +75,6 @@ pub fn build_index(signatures: &[Vec<Fingerprint>]) -> HashMap<u64, Vec<(usize, 
 
 /// All pairs of locations sharing a hash. Hashes found at only one location or at more
 /// than `max_occurrences` locations are ignored. In the same file, overlapping shingles
-/// (distance < k) do not count as a duplication.
 pub fn find_matches(
     index: &HashMap<u64, Vec<(usize, usize)>>,
     k: usize,
@@ -109,9 +108,6 @@ pub fn find_matches(
     matches
 }
 
-/// Merge matches on the same "diagonal" (same file pair and same offset `pos_b - pos_a`)
-/// that are at most `w` tokens apart, then keep regions of at least `min_tokens` tokens.
-/// Exact copies have identical windows, so their fingerprints are at most `w` apart.
 pub fn merge_matches(
     mut matches: Vec<TokenMatch>,
     k: usize,
@@ -122,7 +118,7 @@ pub fn merge_matches(
     matches.sort_unstable_by_key(|m| (m.file_a, m.file_b, diagonal(m), m.pos_a));
 
     let mut out = Vec::new();
-    let mut current: Option<(TokenMatch, TokenMatch)> = None; // (premier, dernier)
+    let mut current: Option<(TokenMatch, TokenMatch)> = None;
 
     let flush = |run: Option<(TokenMatch, TokenMatch)>, out: &mut Vec<RawDuplicate>| {
         let Some((first, last)) = run else { return };
@@ -156,11 +152,10 @@ pub fn merge_matches(
     out
 }
 
-/// Character offsets for each token: `offsets[i]..offsets[i + 1]` is the range of token
-/// `i` in the decoded text (length = `sequence.len() + 1`).
 pub fn token_char_offsets(sequence: &[Token], vocabulary: &Vocabulary) -> Vec<usize> {
     let mut offsets = Vec::with_capacity(sequence.len() + 1);
     let mut acc = 0;
+
     offsets.push(acc);
     for &token in sequence {
         acc += decode_token(token, vocabulary).chars().count();
@@ -204,18 +199,12 @@ pub fn detect_duplicates(result: &BpeTrainingResult, params: &DetectionParams) -
         .collect()
 }
 
-// ---------------------------------------------------------------------------
-// Group pairs into groups and calculate line numbers
-// ---------------------------------------------------------------------------
 
-/// One occurrence of a duplicated block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Instance {
     pub path: PathBuf,
     pub tokens: Range<usize>,
     pub chars: Range<usize>,
-    /// Original file lines (1-based, inclusive bounds). `None` if the file was not
-    /// provided to `group_duplicates`.
     pub lines: Option<RangeInclusive<usize>>,
 }
 
