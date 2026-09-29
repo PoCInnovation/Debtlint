@@ -1,0 +1,78 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-Wall",
+      "-Wextra",
+      "-std=c++20",
+      "-iquote",
+      "include",
+      "-iquote",
+      "include/Components",
+      "-c",
+      "-o",
+      "src/main.o",
+      "src/main.cpp"
+    ],
+    "directory": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23",
+    "file": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/main.cpp",
+    "output": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-Wall",
+      "-Wextra",
+      "-std=c++20",
+      "-iquote",
+      "include",
+      "-iquote",
+      "include/Components",
+      "-c",
+      "-o",
+      "src/Gate.o",
+      "src/Gate.cpp"
+    ],
+    "directory": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23",
+    "file": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/Gate.cpp",
+    "output": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/Gate.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-Wall",
+      "-Wextra",
+      "-std=c++20",
+      "-iquote",
+      "include",
+      "-iquote",
+      "include/Components",
+      "-c",
+      "-o",
+      "src/Circuit.o",
+      "src/Circuit.cpp"
+    ],
+    "directory": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23",
+    "file": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/Circuit.cpp",
+    "output": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/Circuit.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-Wall",
+      "-Wextra",
+      "-std=c++20",
+      "-iquote",
+      "include",
+      "-iquote",
+      "include/Components",
+      "-c",
+      "-o",
+      "src/Shell.o",
+      "src/Shell.cpp"
+    ],
+    "directory": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23",
+    "file": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/Shell.cpp",
+    "output": "/home/rayan/delivery/nanotekspice/G-OOP-400-PAR-4-1-tekspice-23/src/Shell.o"
+  }
+]

@@ -33,7 +33,7 @@ pub fn run_bpe(
         VocabularySource::Train(save_path) => {
             let result = train_corpus(files, bpe_config.vocab_size, bpe_config.min_frequency);
             if let Some(path) = save_path {
-            println!("Vocabulary saved to: {}", path.display());
+                println!("Vocabulary saved to: {}", path.display());
                 save_vocabulary(&path, &result.vocabulary)?;
             }
             Ok(result)

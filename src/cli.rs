@@ -23,10 +23,10 @@ pub struct Args {
     pub save_vocab: Option<PathBuf>,
     /// shingle size in tokens (Winnowing)
     #[arg(long, default_value_t = 4)]
-    pub k: usize,
+    pub shingle_size: usize,
     /// sliding window size in shingles (Winnowing); duplicates of at least k + w - 1 tokens are always found
     #[arg(long, default_value_t = 4)]
-    pub w: usize,
+    pub window_size: usize,
     /// minimum length in tokens of a reported duplicated block
     #[arg(long, default_value_t = 8)]
     pub min_tokens: usize,

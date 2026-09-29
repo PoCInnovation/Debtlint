@@ -8,7 +8,6 @@ use config::get_config;
 use debtlint::duplication::{DetectionParams, DuplicateGroup, detect_duplicates, group_duplicates};
 use debtlint::pipeline::run_bpe;
 use ingestion::ingest_codebase;
-use std::io::{Error, ErrorKind};
 
 fn print_groups(groups: &[DuplicateGroup]) {
     println!("{} duplicated block(s) found", groups.len());
@@ -40,20 +39,13 @@ fn print_groups(groups: &[DuplicateGroup]) {
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    if args.k == 0 || args.w == 0 {
-        return Err(Error::new(
-            ErrorKind::InvalidInput,
-            "--k and --w must be at least 1",
-        ));
-    }
     let cfg = get_config();
     let files = ingest_codebase(cfg);
-
     let result = run_bpe(&files, args.get_bpe_config(), args.get_pipeline_config())?;
 
     let params = DetectionParams {
-        k: args.k,
-        w: args.w,
+        shingle_size_k: args.shingle_size,
+        window_size_w: args.window_size,
         min_tokens: args.min_tokens,
         ..DetectionParams::default()
     };

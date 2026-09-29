@@ -1,78 +1,64 @@
-//! Winnowing (Schleimer, Wilkerson, Aiken 2003) appliqué à un flux de tokens BPE.
-//! Pipeline : tokens -> shingles (k-grams) -> hachages -> fenêtre glissante (w) -> empreintes.
-
 use crate::tokenizer::{BpeTrainingResult, Token};
 use std::collections::VecDeque;
 use std::path::PathBuf;
 
-/// Empreinte sélectionnée : (valeur du hash, index du shingle dans le fichier).
+/// Selected fingerprint: (hash value, shingle index in the file).
 pub type Fingerprint = (u64, usize);
 
-/// Finaliseur splitmix64 : casse toute corrélation avec les IDs BPE bruts.
 #[inline]
-fn mix(mut x: u64) -> u64 {
+fn splitmix64(mut x: u64) -> u64 {
     x = (x ^ (x >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
     x = (x ^ (x >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
     x ^ (x >> 31)
 }
 
-/// Hash déterministe (stable entre exécutions/versions, contrairement à DefaultHasher)
-/// d'un shingle : FNV-1a sur chaque token, puis finaliseur pour l'uniformité.
 pub fn hash_shingle(shingle: &[Token]) -> u64 {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+
     for &t in shingle {
-        h ^= mix(t as u64 ^ 0x9e37_79b9_7f4a_7c15);
+        h ^= splitmix64(t as u64 ^ 0x9e37_79b9_7f4a_7c15);
         h = h.wrapping_mul(0x0000_0100_0000_01b3);
     }
-    mix(h)
+    splitmix64(h)
 }
 
-/// Étape 1 : H = hash de chaque shingle de taille k (m = n - k + 1 valeurs).
+/// First Step: compute the hash of each shingle of size k (m = n - k + 1 values).
 pub fn hash_shingles(tokens: &[Token], k: usize) -> Vec<u64> {
-    assert!(k > 0, "k doit être > 0");
     if tokens.len() < k {
         return Vec::new();
     }
     tokens.windows(k).map(hash_shingle).collect()
 }
 
-/// Étapes 2-3 : fenêtre glissante de taille w sur H, minimum le plus à droite en cas
-/// d'égalité, sans doublon consécutif. Complexité O(m) via une deque monotone.
+/// Second and Third Steps: sliding window of size w on H, the sequence of shingle hashes
+/// (one hash per shingle); select the rightmost minimum in case of equality, without
+/// consecutive duplicates. Complexity O(m) via a monotonic deque.
 pub fn winnow_hashes(hashes: &[u64], w: usize) -> Vec<Fingerprint> {
-    assert!(w > 0, "w doit être > 0");
-    let m = hashes.len();
     let mut selected: Vec<Fingerprint> = Vec::new();
+    let m = hashes.len();
+    let w = w.min(m);
+    let mut min_candidates: VecDeque<usize> = VecDeque::new();
+
     if m == 0 {
         return selected;
     }
-    // Si m < w, il n'y a aucune fenêtre complète : on traite tout H comme une seule fenêtre.
-    let w = w.min(m);
-
-    // Deque d'indices dont les hashes sont strictement croissants ; le front est le minimum.
-    // On retire les éléments >= au nouveau : à égalité, le plus à droite survit.
-    let mut dq: VecDeque<usize> = VecDeque::new();
-
     for i in 0..m {
-        while let Some(&back) = dq.back() {
-            if hashes[back] >= hashes[i] {
-                dq.pop_back();
-            } else {
-                break;
-            }
+        while let Some(&back) = min_candidates.back()
+            && hashes[back] >= hashes[i]
+        {
+            min_candidates.pop_back();
         }
-        dq.push_back(i);
-
-        // Fenêtre courante : [i+1-w, i] ; on la traite dès qu'elle est complète.
+        min_candidates.push_back(i);
         if i + 1 >= w {
             let start = i + 1 - w;
-            while let Some(&front) = dq.front() {
-                if front < start {
-                    dq.pop_front();
-                } else {
-                    break;
-                }
+            while let Some(&front) = min_candidates.front()
+                && front < start
+            {
+                min_candidates.pop_front();
             }
-            let pos = *dq.front().expect("la fenêtre n'est jamais vide");
+            let pos = *min_candidates
+                .front()
+                .expect("The winnowing deque should never be empty here");
             let fp = (hashes[pos], pos);
             if selected.last() != Some(&fp) {
                 selected.push(fp);
@@ -82,14 +68,12 @@ pub fn winnow_hashes(hashes: &[u64], w: usize) -> Vec<Fingerprint> {
     selected
 }
 
-/// Point d'entrée : tokens BPE -> signature du fichier.
 pub fn winnow(tokens: &[Token], k: usize, w: usize) -> Vec<Fingerprint> {
     winnow_hashes(&hash_shingles(tokens, k), w)
 }
 
-/// Signature de chaque fichier du corpus encodé par le BPE.
-/// Le Winnowing est appliqué fichier par fichier : un shingle ne traverse jamais
-/// la frontière entre deux fichiers.
+/// Signature of each file in the BPE-encoded corpus.
+/// Winnowing is applied file by file: a shingle never crosses a file boundary.
 pub fn winnow_corpus(
     result: &BpeTrainingResult,
     k: usize,

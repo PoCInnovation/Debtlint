@@ -1,8 +1,3 @@
-//! Détection de duplications à partir des empreintes Winnowing.
-//!
-//! Pipeline : signatures -> index inversé -> paires de positions communes (matches)
-//! -> fusion des matches alignés en régions -> conversion en offsets de caractères.
-
 use crate::tokenizer::{BpeTrainingResult, SourceFile, Token, Vocabulary, decode_token};
 use crate::winnowing::{Fingerprint, winnow_corpus};
 use std::cmp::Reverse;
@@ -10,33 +5,30 @@ use std::collections::HashMap;
 use std::ops::{Range, RangeInclusive};
 use std::path::{Path, PathBuf};
 
-/// Paramètres de détection.
 #[derive(Debug, Clone)]
 pub struct DetectionParams {
-    /// Taille des shingles (en tokens).
-    pub k: usize,
-    /// Taille de la fenêtre Winnowing. Toute duplication d'au moins `k + w - 1` tokens
-    /// est garantie de partager au moins une empreinte.
-    pub w: usize,
-    /// Longueur minimale (en tokens) d'une région dupliquée pour être rapportée.
+    /// Shingle size in tokens, rolling hashes are computed on shingles of k tokens.
+    pub shingle_size_k: usize,
+    /// Window size in shingles, duplicates of at least k + w - 1 tokens are always found.
+    pub window_size_w: usize,
+    /// Minimum length in tokens of a reported duplicated block.
     pub min_tokens: usize,
-    /// Un hash présent à plus de N endroits est ignoré (boilerplate) : évite l'explosion
-    /// quadratique des paires.
+    /// Maximum number of occurrences of a shingle to be considered for duplication detection.
     pub max_occurrences: usize,
 }
 
 impl Default for DetectionParams {
     fn default() -> Self {
         Self {
-            k: 4,
-            w: 4,
-            min_tokens: 8,
-            max_occurrences: 50,
+            shingle_size_k: 4,
+            window_size_w: 4,
+            min_tokens: 10,
+            max_occurrences: 10,
         }
     }
 }
 
-/// Un hash commun à deux endroits : (fichier, position du shingle) de chaque côté.
+/// A hash shared by two locations: (file, shingle position) on each side.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenMatch {
     pub file_a: usize,
@@ -45,7 +37,7 @@ pub struct TokenMatch {
     pub pos_b: usize,
 }
 
-/// Région dupliquée exprimée en indices de fichiers et de tokens (fin exclue).
+/// A duplicated region expressed as file and token indices (exclusive end).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawDuplicate {
     pub file_a: usize,
@@ -54,7 +46,7 @@ pub struct RawDuplicate {
     pub tokens_b: Range<usize>,
 }
 
-/// Région d'un fichier : plage de tokens BPE et plage de caractères dans le contenu ingéré.
+/// A file region: a range of BPE tokens and a character range in the ingested content.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Region {
     pub path: PathBuf,
@@ -62,17 +54,17 @@ pub struct Region {
     pub chars: Range<usize>,
 }
 
-/// Deux régions au contenu identique.
+/// Two regions with identical content.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Duplicate {
     pub a: Region,
     pub b: Region,
 }
 
-/// Index inversé : hash -> [(index du fichier, position du shingle)].
-/// `signatures[i]` est la signature du fichier `i`.
+/// Reversed Index: hash -> [(file index, shingle position)].
 pub fn build_index(signatures: &[Vec<Fingerprint>]) -> HashMap<u64, Vec<(usize, usize)>> {
     let mut index: HashMap<u64, Vec<(usize, usize)>> = HashMap::new();
+
     for (file, signature) in signatures.iter().enumerate() {
         for &(hash, pos) in signature {
             index.entry(hash).or_default().push((file, pos));
@@ -81,9 +73,9 @@ pub fn build_index(signatures: &[Vec<Fingerprint>]) -> HashMap<u64, Vec<(usize, 
     index
 }
 
-/// Toutes les paires d'emplacements partageant un hash. Les hashs à un seul emplacement
-/// ou à plus de `max_occurrences` emplacements sont ignorés. Dans un même fichier, deux
-/// shingles qui se chevauchent (écart < k) ne comptent pas comme une duplication.
+/// All pairs of locations sharing a hash. Hashes found at only one location or at more
+/// than `max_occurrences` locations are ignored. In the same file, overlapping shingles
+/// (distance < k) do not count as a duplication.
 pub fn find_matches(
     index: &HashMap<u64, Vec<(usize, usize)>>,
     k: usize,
@@ -117,10 +109,9 @@ pub fn find_matches(
     matches
 }
 
-/// Fusionne les matches situés sur la même « diagonale » (même paire de fichiers, même
-/// décalage `pos_b - pos_a`) et espacés d'au plus `w` tokens, puis garde les régions
-/// d'au moins `min_tokens` tokens. Deux copies exactes ont des fenêtres identiques, donc
-/// leurs empreintes se suivent avec un écart <= w.
+/// Merge matches on the same "diagonal" (same file pair and same offset `pos_b - pos_a`)
+/// that are at most `w` tokens apart, then keep regions of at least `min_tokens` tokens.
+/// Exact copies have identical windows, so their fingerprints are at most `w` apart.
 pub fn merge_matches(
     mut matches: Vec<TokenMatch>,
     k: usize,
@@ -165,8 +156,8 @@ pub fn merge_matches(
     out
 }
 
-/// Offsets de caractères de chaque token : `offsets[i]..offsets[i + 1]` est la plage du
-/// token `i` dans le texte décodé (longueur = `sequence.len() + 1`).
+/// Character offsets for each token: `offsets[i]..offsets[i + 1]` is the range of token
+/// `i` in the decoded text (length = `sequence.len() + 1`).
 pub fn token_char_offsets(sequence: &[Token], vocabulary: &Vocabulary) -> Vec<usize> {
     let mut offsets = Vec::with_capacity(sequence.len() + 1);
     let mut acc = 0;
@@ -178,15 +169,21 @@ pub fn token_char_offsets(sequence: &[Token], vocabulary: &Vocabulary) -> Vec<us
     offsets
 }
 
-/// Détection complète sur un corpus encodé par le BPE.
+/// Run duplicate detection on a BPE-encoded corpus.
 pub fn detect_duplicates(result: &BpeTrainingResult, params: &DetectionParams) -> Vec<Duplicate> {
-    let signatures: Vec<Vec<Fingerprint>> = winnow_corpus(result, params.k, params.w)
-        .into_iter()
-        .map(|(_, signature)| signature)
-        .collect();
+    let signatures: Vec<Vec<Fingerprint>> =
+        winnow_corpus(result, params.shingle_size_k, params.window_size_w)
+            .into_iter()
+            .map(|(_, signature)| signature)
+            .collect();
     let index = build_index(&signatures);
-    let matches = find_matches(&index, params.k, params.max_occurrences);
-    let raw = merge_matches(matches, params.k, params.w, params.min_tokens);
+    let matches = find_matches(&index, params.shingle_size_k, params.max_occurrences);
+    let raw = merge_matches(
+        matches,
+        params.shingle_size_k,
+        params.window_size_w,
+        params.min_tokens,
+    );
 
     let offsets: Vec<Vec<usize>> = result
         .files
@@ -208,29 +205,29 @@ pub fn detect_duplicates(result: &BpeTrainingResult, params: &DetectionParams) -
 }
 
 // ---------------------------------------------------------------------------
-// Regroupement des paires en groupes + numéros de ligne
+// Group pairs into groups and calculate line numbers
 // ---------------------------------------------------------------------------
 
-/// Un emplacement d'un bloc dupliqué.
+/// One occurrence of a duplicated block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Instance {
     pub path: PathBuf,
     pub tokens: Range<usize>,
     pub chars: Range<usize>,
-    /// Lignes du fichier d'origine (1-based, bornes incluses). `None` si le fichier
-    /// n'a pas été fourni à `group_duplicates`.
+    /// Original file lines (1-based, inclusive bounds). `None` if the file was not
+    /// provided to `group_duplicates`.
     pub lines: Option<RangeInclusive<usize>>,
 }
 
-/// Un bloc de code présent à au moins deux endroits.
+/// A code block present in at least two locations.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DuplicateGroup {
-    /// Triées par (fichier, position). Toujours >= 2 éléments.
+    /// Sorted by (file, position). Always contains at least two elements.
     pub instances: Vec<Instance>,
 }
 
 impl DuplicateGroup {
-    /// Taille (en caractères) de la plus grande instance.
+    /// Character length of the largest instance.
     pub fn max_chars(&self) -> usize {
         self.instances
             .iter()
@@ -267,7 +264,7 @@ impl UnionFind {
     }
 }
 
-/// Correspondance offset de caractère -> numéro de ligne d'origine.
+/// Maps a character offset to its original line number.
 struct LineIndex<'a> {
     newlines: Vec<usize>,
     numbers: &'a [usize],
@@ -303,28 +300,24 @@ fn overlap(a: &Range<usize>, b: &Range<usize>) -> usize {
     a.end.min(b.end).saturating_sub(a.start.max(b.start))
 }
 
-/// Regroupe les paires en groupes de copies.
+/// Groups pairs into sets of duplicate instances.
 ///
-/// 1. Les régions d'un même fichier qui se recouvrent à au moins 50 % de la plus courte
-///    sont la même instance (les bornes varient de quelques tokens d'une paire à l'autre) ;
-///    l'instance couvre leur union. Les deux côtés d'une même paire ne sont jamais fusionnés.
-/// 2. Les instances liées par une paire sont dans le même groupe (transitivité : si A≈B et
-///    B≈C alors {A, B, C}).
+/// 1. Regions in the same file that overlap by at least 50% of the shorter region are
+///    considered the same instance (bounds can vary by a few tokens between pairs); the
+///    instance covers their union. The two sides of the same pair are never merged.
+/// 2. Instances connected by a pair belong to the same group (transitivity: if A≈B and
+///    B≈C, then {A, B, C}).
 ///
-/// Les groupes sont triés du plus grand nombre de copies au plus petit, puis par taille.
+/// Groups are sorted by descending number of copies, then by size.
 pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<DuplicateGroup> {
-    // Noeuds : région a de la paire i = 2i, région b = 2i + 1.
+    // Nodes: region a of pair i = 2i, region b = 2i + 1.
     let region = |node: usize| {
         let d = &duplicates[node / 2];
-        if node % 2 == 0 {
-            &d.a
-        } else {
-            &d.b
-        }
+        if node % 2 == 0 { &d.a } else { &d.b }
     };
     let node_count = duplicates.len() * 2;
 
-    // Étape 1 : fusion des régions qui se recouvrent, fichier par fichier.
+    // Step 1: merge overlapping regions, file by file.
     let mut instances_uf = UnionFind::new(node_count);
     let mut by_path: HashMap<&Path, Vec<usize>> = HashMap::new();
     for node in 0..node_count {
@@ -346,7 +339,7 @@ pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<D
         }
     }
 
-    // Instances = ensembles de noeuds, couvrant l'union de leurs plages.
+    // Instances are node sets covering the union of their ranges.
     let mut instance_of_root: HashMap<usize, usize> = HashMap::new();
     let mut instances: Vec<Instance> = Vec::new();
     let mut instance_of_node = vec![0; node_count];
@@ -368,13 +361,13 @@ pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<D
         *slot = id;
     }
 
-    // Étape 2 : les instances liées par une paire forment un groupe.
+    // Step 2: instances connected by a pair form a group.
     let mut groups_uf = UnionFind::new(instances.len());
     for i in 0..duplicates.len() {
         groups_uf.union(instance_of_node[2 * i], instance_of_node[2 * i + 1]);
     }
 
-    // Numéros de ligne.
+    // Calculate line numbers.
     let line_indexes: HashMap<&Path, LineIndex> = files
         .iter()
         .map(|f| (f.path.as_path(), LineIndex::new(f)))
@@ -430,7 +423,7 @@ mod tests {
         }
     }
 
-    // ---------- index inversé ----------
+    // ---------- inverted index ----------
 
     #[test]
     fn index_regroupe_les_emplacements_par_hash() {
@@ -477,7 +470,7 @@ mod tests {
 
     #[test]
     fn shingles_qui_se_chevauchent_dans_un_fichier_sont_ignores() {
-        // écart 2 < k = 3 : motif périodique, pas une vraie duplication
+        // Distance 2 < k = 3: a periodic pattern, not a true duplication.
         let index = build_index(&[sig(&[(7, 2), (7, 4)])]);
         assert!(find_matches(&index, 3, 50).is_empty());
     }
@@ -490,11 +483,11 @@ mod tests {
         assert_eq!(find_matches(&index, 3, 5).len(), 10);
     }
 
-    // ---------- fusion en régions ----------
+    // ---------- merging into regions ----------
 
     #[test]
     fn matches_alignes_fusionnes_en_une_region() {
-        // même diagonale (+6), espacés de <= w = 4
+        // Same diagonal (+6), at most w = 4 tokens apart.
         let m = vec![tm(0, 10, 1, 16), tm(0, 13, 1, 19), tm(0, 17, 1, 23)];
         let d = merge_matches(m, 4, 4, 1);
         assert_eq!(
@@ -510,7 +503,7 @@ mod tests {
 
     #[test]
     fn ecart_superieur_a_w_coupe_la_region() {
-        let m = vec![tm(0, 10, 1, 10), tm(0, 15, 1, 15)]; // écart 5 > w = 4
+        let m = vec![tm(0, 10, 1, 10), tm(0, 15, 1, 15)]; // Distance 5 > w = 4.
         let d = merge_matches(m, 4, 4, 1);
         assert_eq!(d.len(), 2);
         assert_eq!(d[0].tokens_a, 10..14);
@@ -538,7 +531,7 @@ mod tests {
 
     #[test]
     fn min_tokens_filtre_les_regions_courtes() {
-        let m = vec![tm(0, 0, 1, 0)]; // longueur = k = 4
+        let m = vec![tm(0, 0, 1, 0)]; // Length = k = 4.
         assert_eq!(merge_matches(m.clone(), 4, 4, 4).len(), 1);
         assert!(merge_matches(m, 4, 4, 5).is_empty());
     }
@@ -548,7 +541,7 @@ mod tests {
         assert!(merge_matches(vec![], 4, 4, 1).is_empty());
     }
 
-    // ---------- offsets de caractères ----------
+    // ---------- character offsets ----------
 
     fn corpus(files: &[(&str, &str)], vocab_size: u32) -> BpeTrainingResult {
         let files: Vec<SourceFile> = files
@@ -570,10 +563,10 @@ mod tests {
         assert!(offsets.windows(2).all(|w| w[0] < w[1]));
     }
 
-    // ---------- bout en bout : BPE -> Winnowing -> duplications ----------
+    // ---------- end-to-end: BPE -> Winnowing -> duplicate detection ----------
 
-    /// Vocabulaire volontairement petit : peu de fusions, donc les blocs dupliqués restent
-    /// visibles sous forme de plusieurs tokens (voir `e2e_un_bpe_trop_agressif_absorbe_la_duplication`).
+    /// Deliberately small vocabulary: few merges, so duplicated blocks remain visible as
+    /// multiple tokens (see `e2e_un_bpe_trop_agressif_absorbe_la_duplication`).
     const E2E_VOCAB: u32 = 110;
 
     const SHARED: &str = "fn compute_total(items: &[Item]) -> u64 { let mut total = 0; \
@@ -589,8 +582,8 @@ mod tests {
 
     fn params() -> DetectionParams {
         DetectionParams {
-            k: 3,
-            w: 3,
+            shingle_size_k: 3,
+            window_size_w: 3,
             min_tokens: 10,
             max_occurrences: 50,
         }
@@ -598,10 +591,14 @@ mod tests {
 
     #[test]
     fn e2e_bloc_partage_entre_deux_fichiers() {
-        let a = format!("struct Alpha {{ id: u32 }} impl Alpha {{ fn new() -> Self {{ Alpha {{ id: 1 }} }} }} {SHARED}");
-        let b = format!("{SHARED} enum Beta {{ One, Two }} fn pick(b: Beta) -> u8 {{ match b {{ Beta::One => 1, Beta::Two => 2 }} }}");
+        let a = format!(
+            "struct Alpha {{ id: u32 }} impl Alpha {{ fn new() -> Self {{ Alpha {{ id: 1 }} }} }} {SHARED}"
+        );
+        let b = format!(
+            "{SHARED} enum Beta {{ One, Two }} fn pick(b: Beta) -> u8 {{ match b {{ Beta::One => 1, Beta::Two => 2 }} }}"
+        );
         let r = corpus(&[("a.rs", &a), ("b.rs", &b)], E2E_VOCAB);
-        // (a.rs répète aussi `Alpha { id: ` : on ne garde que les doublons entre fichiers)
+        // a.rs also repeats `Alpha { id: `; keep only duplicates across files.
         let dups: Vec<_> = detect_duplicates(&r, &params())
             .into_iter()
             .filter(|d| d.a.path != d.b.path)
@@ -612,7 +609,7 @@ mod tests {
         assert_eq!(d.a.path, PathBuf::from("a.rs"));
         assert_eq!(d.b.path, PathBuf::from("b.rs"));
 
-        // les deux régions décodent vers exactement le même texte, situé dans le bloc partagé
+        // Both regions decode to exactly the same text, within the shared block.
         let text_a = slice(&a, &d.a.chars);
         let text_b = slice(&b, &d.b.chars);
         assert_eq!(text_a, text_b);
@@ -675,17 +672,20 @@ mod tests {
 
     #[test]
     fn e2e_un_bpe_trop_agressif_absorbe_la_duplication() {
-        // Un bloc présent 2 fois a toutes ses paires à fréquence >= 2 : avec assez de
-        // fusions autorisées, le BPE le réduit à quelques tokens et le Winnowing (k = 3)
-        // n'a plus de shingle à comparer.
-        let a = format!("struct Alpha {{ id: u32 }} impl Alpha {{ fn new() -> Self {{ Alpha {{ id: 1 }} }} }} {SHARED}");
-        let b = format!("{SHARED} enum Beta {{ One, Two }} fn pick(b: Beta) -> u8 {{ match b {{ Beta::One => 1, Beta::Two => 2 }} }}");
+        // A block appearing twice has all its pairs at frequency >= 2. With enough merges,
+        // BPE reduces it to just a few tokens, leaving Winnowing (k = 3) with no shingle to compare.
+        let a = format!(
+            "struct Alpha {{ id: u32 }} impl Alpha {{ fn new() -> Self {{ Alpha {{ id: 1 }} }} }} {SHARED}"
+        );
+        let b = format!(
+            "{SHARED} enum Beta {{ One, Two }} fn pick(b: Beta) -> u8 {{ match b {{ Beta::One => 1, Beta::Two => 2 }} }}"
+        );
         let r = corpus(&[("a.rs", &a), ("b.rs", &b)], 300);
         assert!(r.encoded_token_count() * 4 < r.initial_token_count);
         assert!(detect_duplicates(&r, &params()).is_empty());
     }
 
-    // ---------- regroupement ----------
+    // ---------- grouping ----------
 
     fn reg(path: &str, start: usize, end: usize) -> Region {
         Region {
@@ -722,7 +722,7 @@ mod tests {
 
     #[test]
     fn trois_paires_completes_donnent_un_groupe_de_trois() {
-        // A≈B, B≈C, A≈C (exactement ce que produit `detect_duplicates` pour 3 copies)
+        // A≈B, B≈C, A≈C (exactly what `detect_duplicates` produces for 3 copies).
         let dups = vec![
             dup(reg("f", 40, 177), reg("f", 232, 369)),
             dup(reg("f", 232, 369), reg("f", 424, 561)),
@@ -747,7 +747,7 @@ mod tests {
 
     #[test]
     fn bornes_legerement_differentes_sont_la_meme_instance() {
-        // le même bloc de x vu avec des bornes un peu différentes dans deux paires
+        // The same block in x, with slightly different bounds in two pairs.
         let dups = vec![
             dup(reg("x", 40, 177), reg("y", 40, 177)),
             dup(reg("x", 42, 180), reg("z", 10, 148)),
@@ -771,7 +771,7 @@ mod tests {
 
     #[test]
     fn les_deux_cotes_dune_meme_paire_ne_fusionnent_pas() {
-        let dups = vec![dup(reg("f", 0, 100), reg("f", 10, 110))]; // recouvrement 90 %
+        let dups = vec![dup(reg("f", 0, 100), reg("f", 10, 110))]; // 90% overlap.
         let groups = group_duplicates(&dups, &[]);
         assert_eq!(groups[0].instances.len(), 2);
     }
@@ -793,7 +793,7 @@ mod tests {
         assert!(group_duplicates(&[], &[]).is_empty());
     }
 
-    // ---------- numéros de ligne ----------
+    // ---------- line numbers ----------
 
     fn file_with_lines(path: &str, content: &str, numbers: &[usize]) -> SourceFile {
         SourceFile {
@@ -805,7 +805,7 @@ mod tests {
 
     #[test]
     fn offsets_convertis_en_numeros_de_ligne_dorigine() {
-        // contenu : a\nb\nc\nd\n ; lignes d'origine 1, 4, 5, 9 (commentaires supprimés entre)
+        // Content: a\nb\nc\nd\n; original lines 1, 4, 5, 9 (comments were removed in between).
         let f = file_with_lines("f", "a\nb\nc\nd\n", &[1, 4, 5, 9]);
         let index = LineIndex::new(&f);
         assert_eq!(index.lines(&(0..1)), Some(1..=1));
@@ -843,7 +843,7 @@ mod tests {
         assert_eq!(groups[0].instances[1].lines, Some(2..=3));
     }
 
-    // ---------- bout en bout avec lignes ----------
+    // ---------- end-to-end with line numbers ----------
 
     const FILE_A: &str = "\
 // Alpha module
@@ -896,13 +896,13 @@ fn total(items: &[Item]) -> u64 {
         assert_eq!(g.instances[0].path, PathBuf::from("a.rs"));
         assert_eq!(g.instances[1].path, PathBuf::from("b.rs"));
 
-        // `fn total` occupe les lignes 4..=12 de a.rs et 7..=17 de b.rs. Le texte partagé
-        // commence au `}` qui termine la ligne précédente (lignes 2 et 4), d'où la marge.
+        // `fn total` spans lines 4..=12 in a.rs and 7..=17 in b.rs. The shared text starts
+        // at the `}` ending the previous line (lines 2 and 4), which explains the margin.
         let la = g.instances[0].lines.clone().unwrap();
         let lb = g.instances[1].lines.clone().unwrap();
         assert!(*la.start() >= 2 && *la.end() <= 12, "{la:?}");
         assert!(*lb.start() >= 4 && *lb.end() <= 17, "{lb:?}");
-        // et la région couvre l'essentiel de la fonction
+        // The region also covers most of the function.
         assert!(la.end() - la.start() >= 6, "{la:?}");
         assert!(lb.end() - lb.start() >= 6, "{lb:?}");
     }
