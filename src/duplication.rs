@@ -301,7 +301,7 @@ pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<D
     // Nodes: region a of pair i = 2i, region b = 2i + 1.
     let region = |node: usize| {
         let d = &duplicates[node / 2];
-        if node % 2 == 0 { &d.a } else { &d.b }
+        if node.is_multiple_of(2) { &d.a } else { &d.b }
     };
     let node_count = duplicates.len() * 2;
 
