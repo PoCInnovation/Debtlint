@@ -103,9 +103,8 @@ pub fn ingest_codebase(cfg: Config) -> Vec<SourceFile> {
         .unwrap_or(false);
 
     let excluded_paths = get_excluded_paths(cfg.excludes);
-    println!("Excluded: {:?}", excluded_paths);
     if !Path::new(&cfg.src).exists() {
-        eprintln!("Config error: {} doesn't exist.", &cfg.src);
+        eprintln!("Config error: {} doesn't exist.", cfg.src);
     }
     if is_git_repo {
         codebase = collect_source_files(cfg.src, excluded_paths);
