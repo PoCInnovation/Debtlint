@@ -199,7 +199,6 @@ pub fn detect_duplicates(result: &BpeTrainingResult, params: &DetectionParams) -
         .collect()
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Instance {
     pub path: PathBuf,
