@@ -6,11 +6,13 @@ use crate::tokenizer::replace::{find_pair_occurrences, replace_pair};
 use crate::tokenizer::sequence::text_to_sequence;
 use crate::tokenizer::{Token, Vocabulary, VocabularyEntry};
 
+#[derive(Debug)]
 pub struct FileTokens {
     pub path: PathBuf,
     pub sequence: Vec<Token>,
 }
 
+#[derive(Debug)]
 pub struct BpeTrainingResult {
     // struct to store the result of the training
     pub files: Vec<FileTokens>,     // vector of FileTokens

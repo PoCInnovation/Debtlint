@@ -1,4 +1,5 @@
 use clap::Parser;
+use debtlint::pipeline::{BpeConfig, PipelineConfig, VocabularySource};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -10,7 +11,7 @@ use std::path::PathBuf;
 pub struct Args {
     #[arg(value_name = "FILE")]
     pub file: PathBuf,
-    #[arg(long, default_value_t = 1000)]
+    #[arg(long, default_value_t = 300)]
     pub vocab_size: u32,
     #[arg(long, default_value_t = 2)]
     pub min_frequency: usize,
@@ -20,7 +21,36 @@ pub struct Args {
     /// save the trained vocabulary in json file
     #[arg(long, value_name = "PATH")]
     pub save_vocab: Option<PathBuf>,
+    /// shingle size in tokens (Winnowing)
+    #[arg(long, default_value_t = 4)]
+    pub shingle_size: usize,
+    /// sliding window size in shingles (Winnowing); duplicates of at least k + w - 1 tokens are always found
+    #[arg(long, default_value_t = 4)]
+    pub window_size: usize,
+    /// minimum length in tokens of a reported duplicated block
+    #[arg(long, default_value_t = 20)]
+    pub min_tokens: usize,
     /// load a vocabulary from json and skip bpe training
     #[arg(long, value_name = "PATH", conflicts_with = "save_vocab")]
     pub load_vocab: Option<PathBuf>,
+}
+
+impl Args {
+    pub fn get_pipeline_config(&self) -> PipelineConfig {
+        let source: VocabularySource = match &self.load_vocab {
+            Some(path) => VocabularySource::Load(path.clone()),
+            None => VocabularySource::Train(self.save_vocab.clone()),
+        };
+        PipelineConfig {
+            source,
+            output_encoded: self.output_encoded.clone(),
+        }
+    }
+
+    pub fn get_bpe_config(&self) -> BpeConfig {
+        BpeConfig {
+            vocab_size: self.vocab_size,
+            min_frequency: self.min_frequency,
+        }
+    }
 }
