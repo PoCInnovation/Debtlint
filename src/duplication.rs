@@ -294,18 +294,16 @@ fn overlap(a: &Range<usize>, b: &Range<usize>) -> usize {
 ///    considered the same instance (bounds can vary by a few tokens between pairs); the
 ///    instance covers their union. The two sides of the same pair are never merged.
 /// 2. Instances connected by a pair belong to the same group (transitivity: if A≈B and
-///    B≈C, then {A, B, C}).
+///    B ≈ C, then {A, B, C}).
 ///
 /// Groups are sorted by descending number of copies, then by size.
 pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<DuplicateGroup> {
-    // Nodes: region a of pair i = 2i, region b = 2i + 1.
     let region = |node: usize| {
         let d = &duplicates[node / 2];
         if node.is_multiple_of(2) { &d.a } else { &d.b }
     };
     let node_count = duplicates.len() * 2;
 
-    // Step 1: merge overlapping regions, file by file.
     let mut instances_uf = UnionFind::new(node_count);
     let mut by_path: HashMap<&Path, Vec<usize>> = HashMap::new();
     for node in 0..node_count {
@@ -327,7 +325,6 @@ pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<D
         }
     }
 
-    // Instances are node sets covering the union of their ranges.
     let mut instance_of_root: HashMap<usize, usize> = HashMap::new();
     let mut instances: Vec<Instance> = Vec::new();
     let mut instance_of_node = vec![0; node_count];
@@ -349,13 +346,11 @@ pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<D
         *slot = id;
     }
 
-    // Step 2: instances connected by a pair form a group.
     let mut groups_uf = UnionFind::new(instances.len());
     for i in 0..duplicates.len() {
         groups_uf.union(instance_of_node[2 * i], instance_of_node[2 * i + 1]);
     }
 
-    // Calculate line numbers.
     let line_indexes: HashMap<&Path, LineIndex> = files
         .iter()
         .map(|f| (f.path.as_path(), LineIndex::new(f)))
