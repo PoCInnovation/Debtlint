@@ -5,7 +5,7 @@ mod ingestion;
 use clap::Parser;
 use cli::Args;
 use config::get_config;
-use debtlint::duplication::{DetectionParams, DuplicateGroup, detect_duplicates, group_duplicates};
+use debtlint::winnowing::{DetectionParams, DuplicateGroup, detect_duplicates, group_duplicates};
 use debtlint::pipeline::run_bpe;
 use ingestion::ingest_codebase;
 
