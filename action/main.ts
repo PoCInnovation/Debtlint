@@ -17,7 +17,7 @@ async function run() {
     const args: string[] = [];
     addOption(args, "--load-vocab", getInput("config-path"));
 
-    const rawOutput = await execCommand('cargo', ['run', 'main.rs'].concat(args));
+    const rawOutput = await execCommand('cargo', ['run', '--', ...args]);
     const diagnostics: Diagnostic[] = z.array(diagnosticSchema).parse(JSON.parse(rawOutput));
     await createPullRequestComments(octokit, diagnostics, eventContext)
 }
