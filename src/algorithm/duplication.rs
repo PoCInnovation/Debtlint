@@ -1,5 +1,5 @@
-use crate::tokenizer::{BpeTrainingResult, SourceFile, Token, Vocabulary, decode_token};
 use super::winnowing::{Fingerprint, winnow_corpus};
+use crate::tokenizer::{BpeTrainingResult, SourceFile, Token, Vocabulary, decode_token};
 use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::ops::{Range, RangeInclusive};
@@ -69,7 +69,7 @@ pub fn build_index(signatures: &[Vec<Fingerprint>]) -> HashMap<u64, Vec<(usize, 
         for &(hash, pos) in signature {
             index.entry(hash).or_default().push((file, pos));
         }
-    } 
+    }
     index
 }
 
