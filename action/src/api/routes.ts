@@ -6,15 +6,17 @@ import { PullRequestContext, Octokit } from '@/typings/github';
 
 async function getSuggestion(diagnostic: Diagnostic): Promise<string> {
     let content = "<!-- debtlint -->\n## Debtlint suggestion\n";
-    content += `### ${diagnostic.description}\n`
+    content += `### ${diagnostic.ranges.length} duplicated copies\n`
 
     for (const range of diagnostic.ranges) {
         try {
             const data = await readFile(range.source, "utf-8");
             let fragment = "```" + range.source.split(".").pop() + "\n";
-            const lines = data.split(/\r?\n/).slice(range.start.line, range.end.line);
-            for (const line of lines) {
-                fragment += line + "\n";
+            if (range.lines !== null) {
+                const lines = data.split(/\r?\n/).slice(range.lines.start - 1, range.lines.end);
+                for (const line of lines) {
+                    fragment += line + "\n";
+                }
             }
             content += fragment + "```\n";
         } catch (err) {
