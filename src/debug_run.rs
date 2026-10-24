@@ -1,8 +1,10 @@
 use debtlint::in_out::{read_corpus, save_vocabulary, write_encoded_sequence_json};
+use debtlint::linter::get_duplicated;
 use debtlint::pipeline::{BpeConfig, run_bpe};
 use debtlint::tokenizer::{BASE_VOCAB_SIZE, SourceFile, decode_sequence};
 
 use crate::cli::Args;
+use serde_json;
 
 pub fn run(args: &Args) -> std::io::Result<()> {
     let content = read_corpus(&args.file)?;
