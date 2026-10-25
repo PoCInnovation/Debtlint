@@ -34,13 +34,10 @@ fn fragment(instance: &Instance) -> Fragment {
             start: instance.chars.start,
             end: instance.chars.end,
         },
-        lines: instance
-            .lines
-            .as_ref()
-            .map(|lines| Bounds {
-                start: *lines.start(),
-                end: *lines.end(),
-            }),
+        lines: instance.lines.as_ref().map(|lines| Bounds {
+            start: *lines.start(),
+            end: *lines.end(),
+        }),
     }
 }
 
