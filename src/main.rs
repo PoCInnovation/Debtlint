@@ -3,9 +3,10 @@ mod config;
 mod ingestion;
 
 use clap::Parser;
-use cli::Args;
+use cli::{Args, ReportFormat};
 use config::get_config;
 use debtlint::algorithm::{DetectionParams, DuplicateGroup, detect_duplicates, group_duplicates};
+use debtlint::in_out::format_groups_json;
 use debtlint::pipeline::run_bpe;
 use ingestion::ingest_codebase;
 
@@ -50,6 +51,10 @@ fn main() -> std::io::Result<()> {
         ..DetectionParams::default()
     };
     let duplicates = detect_duplicates(&result, &params);
-    print_groups(&group_duplicates(&duplicates, &files));
+    let groups = group_duplicates(&duplicates, &files);
+    match args.report_format {
+        ReportFormat::Text => print_groups(&groups),
+        ReportFormat::Json => println!("{}", format_groups_json(&groups)?),
+    }
     Ok(())
 }

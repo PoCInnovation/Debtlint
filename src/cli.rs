@@ -1,6 +1,16 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use debtlint::pipeline::{BpeConfig, PipelineConfig, VocabularySource};
 use std::path::PathBuf;
+
+/// How the duplicate report is written to stdout.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
+pub enum ReportFormat {
+    /// Human-readable report.
+    #[default]
+    Text,
+    /// JSON diagnostics for CI and the GitHub Action.
+    Json,
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -31,6 +41,9 @@ pub struct Args {
     /// load a vocabulary from json and skip bpe training
     #[arg(long, value_name = "PATH", conflicts_with = "save_vocab")]
     pub load_vocab: Option<PathBuf>,
+    /// report format written to stdout: `text` (default) or `json`
+    #[arg(long, value_enum, default_value_t = ReportFormat::Text, value_name = "FORMAT")]
+    pub report_format: ReportFormat,
 }
 
 impl Args {

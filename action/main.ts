@@ -15,6 +15,7 @@ async function run() {
     const eventContext = parsePullRequestContext(context)
 
     const args: string[] = [];
+    addOption(args, "--report-format", "json");
     addOption(args, "--load-vocab", getInput("config-path"));
 
     const rawOutput = await execCommand('cargo', ['run', '--', ...args]);
