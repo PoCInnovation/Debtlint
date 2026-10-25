@@ -364,8 +364,8 @@ fn collapse_instances(
 
 fn link_duplicate_sides(instance_of_node: &[usize], instance_count: usize) -> UnionFind {
     let mut union_find = UnionFind::new(instance_count);
-    for pair in instance_of_node.chunks_exact(2) {
-        union_find.union(pair[0], pair[1]);
+    for &[a, b] in instance_of_node.as_chunks::<2>().0 {
+        union_find.union(a, b);
     }
     union_find
 }
