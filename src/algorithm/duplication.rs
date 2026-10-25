@@ -252,7 +252,6 @@ impl UnionFind {
     }
 }
 
-/// Maps a character offset to its original line number.
 struct LineIndex<'a> {
     newlines: Vec<usize>,
     numbers: &'a [usize],
@@ -288,97 +287,124 @@ fn overlap(a: &Range<usize>, b: &Range<usize>) -> usize {
     a.end.min(b.end).saturating_sub(a.start.max(b.start))
 }
 
-/// Groups pairs into sets of duplicate instances.
-///
-/// 1. Regions in the same file that overlap by at least 50% of the shorter region are
-///    considered the same instance (bounds can vary by a few tokens between pairs); the
-///    instance covers their union. The two sides of the same pair are never merged.
-/// 2. Instances connected by a pair belong to the same group (transitivity: if A≈B and
-///    B ≈ C, then {A, B, C}).
-///
-/// Groups are sorted by descending number of copies, then by size.
-pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<DuplicateGroup> {
-    let region = |node: usize| {
-        let d = &duplicates[node / 2];
-        if node.is_multiple_of(2) { &d.a } else { &d.b }
-    };
-    let node_count = duplicates.len() * 2;
-
-    let mut instances_uf = UnionFind::new(node_count);
-    let mut by_path: HashMap<&Path, Vec<usize>> = HashMap::new();
-    for node in 0..node_count {
-        by_path.entry(&region(node).path).or_default().push(node);
+fn region_at(duplicates: &[Duplicate], node: usize) -> &Region {
+    let duplicate = &duplicates[node / 2];
+    if node.is_multiple_of(2) {
+        &duplicate.a
+    } else {
+        &duplicate.b
     }
+}
+
+fn union_same_file_overlaps(duplicates: &[Duplicate]) -> UnionFind {
+    let node_count = duplicates.len() * 2;
+    let mut union_find = UnionFind::new(node_count);
+    let mut by_path: HashMap<&Path, Vec<usize>> = HashMap::new();
+
+    for node in 0..node_count {
+        by_path
+            .entry(region_at(duplicates, node).path.as_path())
+            .or_default()
+            .push(node);
+    }
+
     for nodes in by_path.values_mut() {
-        nodes.sort_by_key(|&n| (region(n).tokens.start, region(n).tokens.end));
+        nodes.sort_by_key(|&node| {
+            let tokens = &region_at(duplicates, node).tokens;
+            (tokens.start, tokens.end)
+        });
         for (i, &a) in nodes.iter().enumerate() {
             for &b in &nodes[i + 1..] {
-                let (ra, rb) = (&region(a).tokens, &region(b).tokens);
-                if rb.start >= ra.end {
+                let (left, right) = (
+                    &region_at(duplicates, a).tokens,
+                    &region_at(duplicates, b).tokens,
+                );
+                if right.start >= left.end {
                     break;
                 }
-                let shorter = (ra.end - ra.start).min(rb.end - rb.start);
-                if a / 2 != b / 2 && overlap(ra, rb) * 2 >= shorter {
-                    instances_uf.union(a, b);
+                let shorter = (left.end - left.start).min(right.end - right.start);
+                if a / 2 != b / 2 && overlap(left, right) * 2 >= shorter {
+                    union_find.union(a, b);
                 }
             }
         }
     }
+    union_find
+}
 
+fn collapse_instances(
+    duplicates: &[Duplicate],
+    union_find: &mut UnionFind,
+) -> (Vec<Instance>, Vec<usize>) {
     let mut instance_of_root: HashMap<usize, usize> = HashMap::new();
-    let mut instances: Vec<Instance> = Vec::new();
-    let mut instance_of_node = vec![0; node_count];
+    let mut instances = Vec::new();
+    let mut instance_of_node = vec![0; duplicates.len() * 2];
+
     for (node, slot) in instance_of_node.iter_mut().enumerate() {
-        let root = instances_uf.find(node);
-        let r = region(node);
+        let root = union_find.find(node);
+        let region = region_at(duplicates, node);
         let id = *instance_of_root.entry(root).or_insert_with(|| {
             instances.push(Instance {
-                path: r.path.clone(),
-                tokens: r.tokens.clone(),
-                chars: r.chars.clone(),
+                path: region.path.clone(),
+                tokens: region.tokens.clone(),
+                chars: region.chars.clone(),
                 lines: None,
             });
             instances.len() - 1
         });
-        let inst = &mut instances[id];
-        inst.tokens = inst.tokens.start.min(r.tokens.start)..inst.tokens.end.max(r.tokens.end);
-        inst.chars = inst.chars.start.min(r.chars.start)..inst.chars.end.max(r.chars.end);
+        let instance = &mut instances[id];
+        instance.tokens = instance.tokens.start.min(region.tokens.start)
+            ..instance.tokens.end.max(region.tokens.end);
+        instance.chars =
+            instance.chars.start.min(region.chars.start)..instance.chars.end.max(region.chars.end);
         *slot = id;
     }
+    (instances, instance_of_node)
+}
 
-    let mut groups_uf = UnionFind::new(instances.len());
-    for i in 0..duplicates.len() {
-        groups_uf.union(instance_of_node[2 * i], instance_of_node[2 * i + 1]);
+fn link_duplicate_sides(instance_of_node: &[usize], instance_count: usize) -> UnionFind {
+    let mut union_find = UnionFind::new(instance_count);
+    for pair in instance_of_node.chunks_exact(2) {
+        union_find.union(pair[0], pair[1]);
     }
+    union_find
+}
 
+fn fill_line_ranges(instances: &mut [Instance], files: &[SourceFile]) {
     let line_indexes: HashMap<&Path, LineIndex> = files
         .iter()
-        .map(|f| (f.path.as_path(), LineIndex::new(f)))
+        .map(|file| (file.path.as_path(), LineIndex::new(file)))
         .collect();
-    for inst in &mut instances {
-        inst.lines = line_indexes
-            .get(inst.path.as_path())
-            .and_then(|index| index.lines(&inst.chars));
+    for instance in instances {
+        instance.lines = line_indexes
+            .get(instance.path.as_path())
+            .and_then(|index| index.lines(&instance.chars));
+    }
+}
+
+fn into_sorted_groups(instances: Vec<Instance>, union_find: &mut UnionFind) -> Vec<DuplicateGroup> {
+    let mut by_root: HashMap<usize, Vec<Instance>> = HashMap::new();
+    for (id, instance) in instances.into_iter().enumerate() {
+        by_root
+            .entry(union_find.find(id))
+            .or_default()
+            .push(instance);
     }
 
-    let mut groups: HashMap<usize, Vec<Instance>> = HashMap::new();
-    for (id, inst) in instances.into_iter().enumerate() {
-        groups.entry(groups_uf.find(id)).or_default().push(inst);
-    }
-    let mut groups: Vec<DuplicateGroup> = groups
+    let mut groups: Vec<DuplicateGroup> = by_root
         .into_values()
-        .filter(|instances| instances.len() >= 2)
-        .map(|mut instances| {
-            instances.sort_by(|a, b| (&a.path, a.tokens.start).cmp(&(&b.path, b.tokens.start)));
-            DuplicateGroup { instances }
+        .filter(|members| members.len() >= 2)
+        .map(|mut members| {
+            members.sort_by(|a, b| (&a.path, a.tokens.start).cmp(&(&b.path, b.tokens.start)));
+            DuplicateGroup { instances: members }
         })
         .collect();
     groups.sort_by(|a, b| {
-        let key = |g: &DuplicateGroup| {
-            let first = &g.instances[0];
+        let key = |group: &DuplicateGroup| {
+            let first = &group.instances[0];
             (
-                Reverse(g.instances.len()),
-                Reverse(g.max_chars()),
+                Reverse(group.instances.len()),
+                Reverse(group.max_chars()),
                 first.path.clone(),
                 first.tokens.start,
             )
@@ -386,4 +412,12 @@ pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<D
         key(a).cmp(&key(b))
     });
     groups
+}
+
+pub fn group_duplicates(duplicates: &[Duplicate], files: &[SourceFile]) -> Vec<DuplicateGroup> {
+    let mut overlaps = union_same_file_overlaps(duplicates);
+    let (mut instances, instance_of_node) = collapse_instances(duplicates, &mut overlaps);
+    let mut groups = link_duplicate_sides(&instance_of_node, instances.len());
+    fill_line_ranges(&mut instances, files);
+    into_sorted_groups(instances, &mut groups)
 }
