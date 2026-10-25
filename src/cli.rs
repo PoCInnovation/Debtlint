@@ -19,7 +19,7 @@ pub enum ReportFormat {
     about = "Technical debt detection via BPE-inspired pattern analysis"
 )]
 pub struct Args {
-    #[arg(long, default_value_t = 300)]
+    #[arg(long, default_value_t = 500)]
     pub vocab_size: u32,
     #[arg(long, default_value_t = 2)]
     pub min_frequency: usize,
@@ -30,10 +30,10 @@ pub struct Args {
     #[arg(long, value_name = "PATH")]
     pub save_vocab: Option<PathBuf>,
     /// shingle size in tokens (Winnowing)
-    #[arg(long, default_value_t = 4)]
+    #[arg(long, default_value_t = 50)]
     pub shingle_size: usize,
     /// sliding window size in shingles (Winnowing); duplicates of at least k + w - 1 tokens are always found
-    #[arg(long, default_value_t = 4)]
+    #[arg(long, default_value_t = 50)]
     pub window_size: usize,
     /// minimum length in tokens of a reported duplicated block
     #[arg(long, default_value_t = 20)]

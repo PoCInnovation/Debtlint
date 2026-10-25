@@ -6,12 +6,15 @@ import { buildBlobUrl, resolveRepoRelativePath } from '@/utils/links';
 
 function fragmentHeading(context: PullRequestContext, range: Fragment): string {
     const path = resolveRepoRelativePath(range.source);
-    const label = range.lines === null
-        ? path
-        : range.lines.start === range.lines.end
-            ? `${path}#L${range.lines.start}`
-            : `${path}#L${range.lines.start}-L${range.lines.end}`;
-    return `### [\`${label}\`](${buildBlobUrl(context, range)})\n`;
+    const link = `[\`${path}\`](${buildBlobUrl(context, range)})`;
+
+    if (range.lines === null) {
+        return link;
+    }
+    if (range.lines.start === range.lines.end) {
+        return `${link} · line ${range.lines.start}`;
+    }
+    return `${link} · lines ${range.lines.start}–${range.lines.end}`;
 }
 
 async function getSuggestion(diagnostic: Diagnostic, context: PullRequestContext): Promise<string> {

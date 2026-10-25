@@ -3,6 +3,7 @@ import { PullRequestContext } from '@/typings/github';
 
 export function resolveRepoRelativePath(source: string): string {
     let path = source.replace(/\\/g, "/");
+
     const workspace = process.env.GITHUB_WORKSPACE?.replace(/\\/g, "/").replace(/\/$/, "");
     if (workspace && path.startsWith(`${workspace}/`)) {
         path = path.slice(workspace.length + 1);
@@ -13,6 +14,7 @@ export function resolveRepoRelativePath(source: string): string {
 export function buildBlobUrl(context: PullRequestContext, range: Fragment): string {
     const path = resolveRepoRelativePath(range.source);
     const base = `https://github.com/${context.owner}/${context.repo}/blob/${context.sha}/${path}`;
+
     if (range.lines === null) {
         return base;
     }
