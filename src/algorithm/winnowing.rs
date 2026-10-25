@@ -2,7 +2,6 @@ use crate::tokenizer::{BpeTrainingResult, Token};
 use std::collections::VecDeque;
 use std::path::PathBuf;
 
-/// Selected fingerprint: (hash value, shingle index in the file).
 pub type Fingerprint = (u64, usize);
 
 #[inline]
@@ -22,7 +21,6 @@ pub fn hash_shingle(shingle: &[Token]) -> u64 {
     splitmix64(h)
 }
 
-/// First Step: compute the hash of each shingle of size k (m = n - k + 1 values).
 pub fn hash_shingles(tokens: &[Token], k: usize) -> Vec<u64> {
     if tokens.len() < k {
         return Vec::new();
@@ -30,9 +28,6 @@ pub fn hash_shingles(tokens: &[Token], k: usize) -> Vec<u64> {
     tokens.windows(k).map(hash_shingle).collect()
 }
 
-/// Second and Third Steps: sliding window of size w on H, the sequence of shingle hashes
-/// (one hash per shingle); select the rightmost minimum in case of equality, without
-/// consecutive duplicates. Complexity O(m) via a monotonic deque.
 pub fn winnow_hashes(hashes: &[u64], w: usize) -> Vec<Fingerprint> {
     let mut selected: Vec<Fingerprint> = Vec::new();
     let m = hashes.len();
@@ -72,8 +67,6 @@ pub fn winnow(tokens: &[Token], k: usize, w: usize) -> Vec<Fingerprint> {
     winnow_hashes(&hash_shingles(tokens, k), w)
 }
 
-/// Signature of each file in the BPE-encoded corpus.
-/// Winnowing is applied file by file: a shingle never crosses a file boundary.
 pub fn winnow_corpus(
     result: &BpeTrainingResult,
     k: usize,

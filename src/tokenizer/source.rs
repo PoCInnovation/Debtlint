@@ -5,10 +5,7 @@ const COMMENT_PREFIXES: [&str; 2] = ["#", "//"];
 
 pub struct SourceFile {
     pub path: PathBuf,
-    /// Normalized text seen by the BPE: one `\n`-terminated line per kept source line.
     pub content: String,
-    /// `line_numbers[i]` is the 1-based line number in the original file of the i-th
-    /// line of `content` (comment and blank lines are dropped, so numbers can skip).
     pub line_numbers: Vec<usize>,
 }
 
