@@ -7,7 +7,8 @@ export type GithubContext = typeof context;
 export const PullRequestSchema = z.object({
     owner: z.string(),
     repo: z.string(),
-    issueNumber: z.number()
+    issueNumber: z.number(),
+    sha: z.string().min(1),
 });
 
 export type PullRequestContext = z.infer<typeof PullRequestSchema>
