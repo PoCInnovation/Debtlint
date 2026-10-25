@@ -14,7 +14,7 @@ function fragmentHeading(context: PullRequestContext, range: Fragment): string {
     if (range.lines.start === range.lines.end) {
         return `${link} · line ${range.lines.start}`;
     }
-    return `${link} · lines ${range.lines.start}–${range.lines.end}`;
+    return `${link} · lines ${range.lines.start}–${range.lines.end}\n`;
 }
 
 async function getSuggestion(diagnostic: Diagnostic, context: PullRequestContext): Promise<string> {
