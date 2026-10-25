@@ -23,10 +23,10 @@ fn get_excluded_paths(excluded: Vec<String>) -> Vec<String> {
 }
 
 fn is_path_excluded(path: &str, excluded_paths: &[String]) -> bool {
-    let Ok(absolute) = PathBuf::from(path).canonicalize() else {
-        return false;
-    };
-    excluded_paths.contains(&absolute.to_string_lossy().to_string())
+    let candidate = Path::new(path);
+    excluded_paths
+        .iter()
+        .any(|excluded| is_inside_folder(candidate, Path::new(excluded)))
 }
 
 fn is_inside_folder(path: &Path, folder: &Path) -> bool {
