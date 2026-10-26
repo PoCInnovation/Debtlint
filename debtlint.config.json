@@ -1,4 +1,4 @@
 {
   "src": ".",
-  "excludes": ["action", "target", "doc", ".github", "fixtures"]
+  "excludes": ["action", "target", "doc", ".github"]
 }
