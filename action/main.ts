@@ -16,7 +16,7 @@ async function run() {
 
     const args: string[] = [];
     addOption(args, "--report-format", "json");
-    addOption(args, "--load-vocab", getInput("config-path"));
+    addOption(args, "--load-vocab", getInput("vocab-path"));
 
     const rawOutput = await execCommand('cargo', ['run', '--', ...args]);
     const diagnostics: Diagnostic[] = z.array(diagnosticSchema).parse(JSON.parse(rawOutput));

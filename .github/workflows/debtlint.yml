@@ -14,5 +14,5 @@ jobs:
             - name: Run debtlint
               uses: ./action
               with:
-                vocab-path: fixtures/sample.vocab.json
+                vocab-path: .debtlint/.debtlint-vocab.json
                 extensions: 'rs, py'
