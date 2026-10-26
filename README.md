@@ -160,8 +160,8 @@ Developers
 | :---: | :---: | :---: |
 
 Manager
-| [<img src="https://github.com/lg-epitech.png?size=85" width=85><br><sub>Laurent Gonzalez</sub>](https://github.com/lg-epitech)
-| :---: |
+| [<img src="https://github.com/lg-epitech.png?size=85" width=85><br><sub>Laurent Gonzalez</sub>](https://github.com/lg-epitech) | [<img src="https://github.com/lhnfe.png?size=85" width=85><br><sub>Lohan</sub>](https://github.com/lhnfe) |
+| :---: | :---: |
 
 <h2 align=center>
 Organization
