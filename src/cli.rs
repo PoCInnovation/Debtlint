@@ -1,5 +1,16 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use debtlint::pipeline::{BpeConfig, PipelineConfig, VocabularySource};
 use std::path::PathBuf;
+
+/// How the duplicate report is written to stdout.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
+pub enum ReportFormat {
+    /// Human-readable report.
+    #[default]
+    Text,
+    /// JSON diagnostics for CI and the GitHub Action.
+    Json,
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -8,8 +19,6 @@ use std::path::PathBuf;
     about = "Technical debt detection via BPE-inspired pattern analysis"
 )]
 pub struct Args {
-    #[arg(value_name = "FILE")]
-    pub file: PathBuf,
     #[arg(long, default_value_t = 1000)]
     pub vocab_size: u32,
     #[arg(long, default_value_t = 2)]
@@ -20,7 +29,39 @@ pub struct Args {
     /// save the trained vocabulary in json file
     #[arg(long, value_name = "PATH")]
     pub save_vocab: Option<PathBuf>,
+    /// shingle size in tokens (Winnowing)
+    #[arg(long, default_value_t = 50)]
+    pub shingle_size: usize,
+    /// sliding window size in shingles (Winnowing); duplicates of at least k + w - 1 tokens are always found
+    #[arg(long, default_value_t = 3)]
+    pub window_size: usize,
+    /// minimum length in tokens of a reported duplicated block
+    #[arg(long, default_value_t = 20)]
+    pub min_tokens: usize,
     /// load a vocabulary from json and skip bpe training
     #[arg(long, value_name = "PATH", conflicts_with = "save_vocab")]
     pub load_vocab: Option<PathBuf>,
+    /// report format written to stdout: `text` (default) or `json`
+    #[arg(long, value_enum, default_value_t = ReportFormat::Text, value_name = "FORMAT")]
+    pub report_format: ReportFormat,
+}
+
+impl Args {
+    pub fn get_pipeline_config(&self) -> PipelineConfig {
+        let source: VocabularySource = match &self.load_vocab {
+            Some(path) => VocabularySource::Load(path.clone()),
+            None => VocabularySource::Train(self.save_vocab.clone()),
+        };
+        PipelineConfig {
+            source,
+            output_encoded: self.output_encoded.clone(),
+        }
+    }
+
+    pub fn get_bpe_config(&self) -> BpeConfig {
+        BpeConfig {
+            vocab_size: self.vocab_size,
+            min_frequency: self.min_frequency,
+        }
+    }
 }

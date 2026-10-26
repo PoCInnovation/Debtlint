@@ -5,7 +5,7 @@
 # Debtlint
 
 **Debtlint** is a technical debt detection tool focused on duplicated logic, built for the era of AI code generation.
-It automatically identifies repeated or near-duplicate code segments across a codebase, then provides concrete refactoring guidance.
+It identifies repeated or near-duplicate code segments across a codebase and reports them for refactoring.
 
 ## Vision
 
@@ -19,27 +19,67 @@ Debtlint provides a **programmatic, fast, and cost-efficient** way to prevent th
 ## Objectives
 
 - Detect exact duplications and structural similarities.
-- Prioritize technical debt hotspots with a confidence score.
-- Provide actionable reports to guide refactoring.
+- Surface duplicated blocks with file and line locations.
+- Provide actionable reports (terminal + JSON) for local use and CI.
 - Integrate easily into team workflows (local, CI, agents).
 - Stay as language-agnostic as possible.
+
+## Install
+
+```bash
+cargo install debtlint
+```
+
+Or from the repository:
+
+```bash
+cargo install --path .
+```
+
+## Quick start
+
+1. Create a `debtlint.config.json` at the root of the project:
+
+```json
+{
+  "src": ".",
+  "excludes": ["target", "node_modules", ".git"]
+}
+```
+
+2. Optionally train and save your own vocabulary as `.debtlint-vocab.json`:
+
+```bash
+debtlint --save-vocab .debtlint-vocab.json
+```
+
+3. Run Debtlint (reuse the vocabulary to skip BPE training):
+
+```bash
+debtlint --load-vocab .debtlint-vocab.json
+```
+
+Or run without a saved vocabulary (trains BPE on the fly):
+
+```bash
+debtlint
+```
 
 ## How It Works
 
 The Debtlint pipeline follows four main steps:
 
 1. **Code ingestion**
-   Read the target codebase (source files while excluding irrelevant directories).
+   Read tracked source files under `src` from `debtlint.config.json`, while respecting `excludes`.
 
-2. **Sanitization / normalization**
-   Clean inputs (comments, surface-level formatting, token normalization) to preserve meaningful logic.
+2. **BPE encoding**
+   Train (or load) a Byte Pair Encoding vocabulary to turn source into token sequences that capture recurring patterns.
 
-3. **BPE encoding and analysis**
-   Use an approach inspired by **Byte Pair Encoding (BPE)** to identify frequent and repetitive patterns.
-   The goal is to surface representative segments of recurring code structures at scale.
+3. **Winnowing-based duplicate detection**
+   Build hashed shingles over the token stream, select fingerprints with a sliding window, then extend matching regions into duplicated blocks.
 
-4. **Scoring and reporting**
-   Generate human-readable and machine-readable reports: occurrences, similarity level, potential impact, and refactoring hints.
+4. **Reporting**
+   Print a human-readable summary by default, or JSON for CI and agents (`--report-format json`).
 
 ## Why BPE
 
@@ -48,37 +88,63 @@ In Debtlint, this logic helps highlight repetitive structures and grammatical bl
 
 Core reference: [Byte pair encoding - Wikipedia](https://en.wikipedia.org/wiki/Byte_pair_encoding)
 
+More detail: [doc/bpe.md](./doc/bpe.md)
+
 ## CLI
 
-Debtlint is designed first as a **CLI**:
-- run locally on a codebase,
-- simple configuration (includes/excludes, thresholds),
-- report output (terminal + CI-friendly formats).
+```bash
+debtlint [OPTIONS]
+```
 
-Command example (target spec):
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--vocab-size` | `1000` | Max vocabulary size (base + merges) |
+| `--min-frequency` | `2` | Min pair frequency to create a merge |
+| `--load-vocab <PATH>` | — | Load a vocabulary JSON and skip BPE training |
+| `--save-vocab <PATH>` | — | Save the trained vocabulary as JSON |
+| `--output-encoded <PATH>` | — | Write encoded token sequences as JSON |
+| `--shingle-size` | `50` | Shingle size in tokens (Winnowing) |
+| `--window-size` | `3` | Sliding window size in shingles |
+| `--min-tokens` | `20` | Minimum duplicated block length in tokens |
+| `--report-format` | `text` | `text` or `json` |
+
+Examples:
 
 ```bash
-debtlint scan . --format json --min-score 0.75
+# Human-readable report
+debtlint
+
+# JSON for CI / agents
+debtlint --load-vocab debtlint-vocab.json --report-format json
+
+# Train and persist a vocabulary
+debtlint --vocab-size 2000 --save-vocab vocab.json
 ```
+
+Configuration is read from `debtlint.config.json` in the current directory.
 
 ## GitHub Actions Integration
 
-The project is designed to run automatically in CI pipelines:
-- analyze every pull request,
-- publish a technical debt report,
-- optionally fail the job based on configured thresholds.
+Use the github action in this repository to analyze pull requests:
 
-Goal: make technical debt visible early, before it spreads into the main branch.
+```yaml
+- uses: PoCInnovation/Debtlint/action@main
+  with:
+    vocab-path: path/to/vocab.json
+    extensions: 'rs, py, ts'
+```
 
-## MCP Integration
+Debtlint can fail early visibility on technical debt before it lands on `main`.
 
-Debtlint can be exposed as an MCP tool for AI agents:
-- an agent generates code,
-- it queries Debtlint after generation,
-- it detects existing abstractions or duplicated patterns,
-- it updates its proposal to reduce technical debt.
+## Agent integration
 
-This loop upgrades generation from "best effort" to codebase-aware generation.
+Debtlint can sit in an agent loop after code generation:
+- generate code,
+- run `debtlint --report-format json`,
+- refactor reported duplicates,
+- re-run until clean (or after a fixed number of iterations).
+
+An agent skill lives in [`skills/debtlint`](./skills/debtlint).
 
 ## Contributing
 
@@ -90,8 +156,8 @@ Read the guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 ## Our PoC team ❤️
 
 Developers
-| [<img src="https://github.com/EnzoRuffino.png?size=85" width=85><br><sub>Enzo Ruffino</sub>](https://github.com/EnzoRuffino) | [<img src="https://github.com/skl1017.png?size=85" width=85><br><sub>Loan Riyanto</sub>](https://github.com/skl1017) | [<img src="https://github.com/Staney111.png?size=85" width=85><br><sub>Eythan EL QUALI</sub>](https://github.com/Staney111) | [<img src="https://github.com/Rayan-ouer.png?size=85" width=85><br><sub>Rayan</sub>](https://github.com/Rayan-ouer) |
-| :---: | :---: | :---: | :---: |
+| [<img src="https://github.com/EnzoRuffino.png?size=85" width=85><br><sub>Enzo Ruffino</sub>](https://github.com/EnzoRuffino) | [<img src="https://github.com/skl1017.png?size=85" width=85><br><sub>Loan Riyanto</sub>](https://github.com/skl1017) | [<img src="https://github.com/Rayan-ouer.png?size=85" width=85><br><sub>Rayan</sub>](https://github.com/Rayan-ouer) |
+| :---: | :---: | :---: |
 
 Manager
 | [<img src="https://github.com/lg-epitech.png?size=85" width=85><br><sub>Laurent Gonzalez</sub>](https://github.com/lg-epitech)
