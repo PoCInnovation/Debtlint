@@ -13,10 +13,6 @@ inputs:
   vocab-path:
     description: "Debtlint vocabulary. If speficied Debtlint will run with the ```--load-vocab``` flag."
     required: false
-  
-  extensions:
-    description: "The file extensions to run Debtlint against. This is a comma-separated string."
-    required: false
 
 runs:
   using: composite
@@ -40,4 +36,4 @@ runs:
       working-directory: ${{ github.action_path }}/action
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: npx tsx --tsconfig action/tsconfig.json main.ts
+      run: npx tsx --tsconfig tsconfig.json main.ts
