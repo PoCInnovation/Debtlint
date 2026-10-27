@@ -1,3 +1,5 @@
+import { isAbsolute, join } from "path";
+
 import { Fragment } from '@/typings/diagnostic';
 import { PullRequestContext } from '@/typings/github';
 
@@ -9,6 +11,17 @@ export function resolveRepoRelativePath(source: string): string {
         path = path.slice(workspace.length + 1);
     }
     return path.replace(/^\.\//, "");
+}
+
+export function resolveWorkspaceFilePath(source: string): string {
+    if (isAbsolute(source)) {
+        return source;
+    }
+    const workspace = process.env.GITHUB_WORKSPACE;
+    if (!workspace) {
+        throw new Error("GITHUB_WORKSPACE is not set");
+    }
+    return join(workspace, resolveRepoRelativePath(source));
 }
 
 export function buildBlobUrl(context: PullRequestContext, range: Fragment): string {

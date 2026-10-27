@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 
 import { Diagnostic, Fragment } from '@/typings/diagnostic';
 import { PullRequestContext, Octokit } from '@/typings/github';
-import { buildBlobUrl, resolveRepoRelativePath } from '@/utils/links';
+import { buildBlobUrl, resolveRepoRelativePath, resolveWorkspaceFilePath } from '@/utils/links';
 
 function fragmentHeading(context: PullRequestContext, range: Fragment): string {
     const path = resolveRepoRelativePath(range.source);
@@ -22,11 +22,12 @@ async function getSuggestion(diagnostic: Diagnostic, context: PullRequestContext
     content += `### ${diagnostic.ranges.length} duplicated copies\n`
 
     for (const range of diagnostic.ranges) {
+        const relativePath = resolveRepoRelativePath(range.source);
         try {
             content += fragmentHeading(context, range);
 
-            const data = await readFile(range.source, "utf-8");
-            let fragment = "```" + range.source.split(".").pop() + "\n";
+            const data = await readFile(resolveWorkspaceFilePath(range.source), "utf-8");
+            let fragment = "```" + relativePath.split(".").pop() + "\n";
             if (range.lines !== null) {
                 const lines = data.split(/\r?\n/).slice(range.lines.start - 1, range.lines.end);
                 for (const line of lines) {
@@ -35,7 +36,7 @@ async function getSuggestion(diagnostic: Diagnostic, context: PullRequestContext
             }
             content += fragment + "```\n";
         } catch (err) {
-            console.error(`Error reading ${range.source}:`, err);
+            console.error(`Error reading ${relativePath}:`, err);
         }
     }
     return content;

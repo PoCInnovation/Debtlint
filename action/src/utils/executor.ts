@@ -1,8 +1,12 @@
 import { spawn } from 'child_process';
 
-export const execCommand = (cmd: string, args: string[] = []): Promise<string> => {
+export const execCommand = (
+    cmd: string,
+    args: string[] = [],
+    cwd?: string,
+): Promise<string> => {
     return new Promise((resolve, reject) => {
-        const process = spawn(cmd, args);
+        const process = spawn(cmd, args, { cwd });
         let output: string = ""
         let errorOutput: string = ""
         

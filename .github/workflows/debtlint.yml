@@ -12,7 +12,6 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Run debtlint
-              uses: ./action
+              uses: ./
               with:
                 vocab-path: fixtures/sample.vocab.json
-                extensions: 'rs, py'

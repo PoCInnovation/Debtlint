@@ -125,16 +125,32 @@ Configuration is read from `debtlint.config.json` in the current directory.
 
 ## GitHub Actions Integration
 
-Use the github action in this repository to analyze pull requests:
+Use the action in this repository (`action.yml` at the root) to analyze pull requests.
+See [action/README.md](./action/README.md) for inputs and details.
 
 ```yaml
-- uses: PoCInnovation/Debtlint/action@main
-  with:
-    vocab-path: path/to/vocab.json
-    extensions: 'rs, py, ts'
+name: Check duplication
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  debtlint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run debtlint
+        uses: PoCInnovation/Debtlint@v1
+        with:
+          vocab-path: .debtlint-vocab.json
 ```
 
-Debtlint can fail early visibility on technical debt before it lands on `main`.
 
 ## Agent integration
 
@@ -145,6 +161,10 @@ Debtlint can sit in an agent loop after code generation:
 - re-run until clean (or after a fixed number of iterations).
 
 An agent skill lives in [`skills/debtlint`](./skills/debtlint).
+
+## License
+
+This project is licensed under the [Apache License 2.0](./LICENSE).
 
 ## Contributing
 
