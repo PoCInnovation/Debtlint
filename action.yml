@@ -5,13 +5,9 @@ branding:
   icon: "check-circle"
   color: "green"
 
-inputs:
-  config-path:
-    description: "Debtlint configuration file."
-    required: false
-  
+inputs:  
   vocab-path:
-    description: "Debtlint vocabulary. If speficied Debtlint will run with the ```--load-vocab``` flag."
+    description: "Debtlint vocabulary. If specified, Debtlint runs with the --load-vocab flag."
     required: false
 
 runs:
