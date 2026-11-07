@@ -19,7 +19,7 @@ pub fn save_vocabulary(path: &Path, vocabulary: &Vocabulary) -> Result<()> {
     fs::write(path, json)
 }
 
-/// Load a vocabulary file. Accepts the cached document format or legacy export JSON.
+/// Load a cached vocab document or legacy export JSON.
 pub fn load_vocabulary(path: &Path) -> Result<Vocabulary> {
     let json = fs::read_to_string(path)?;
     if let Ok(document) = serde_json::from_str::<VocabularyDocument>(&json) {

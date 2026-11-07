@@ -10,7 +10,7 @@ fn get_file(path: &Path) -> Option<SourceFile> {
     Some(SourceFile::from_text(PathBuf::from(path), &text))
 }
 
-/// Turn a config exclude into an `ignore` override ignore-glob (`!…`).
+/// Map a config exclude to an `ignore` override glob (`!…`).
 fn to_ignore_glob(exclude: &str) -> Option<String> {
     let pattern = exclude.trim();
     if pattern.is_empty() || pattern.starts_with('#') {

@@ -53,7 +53,7 @@ cargo install --path .
 debtlint
 ```
 
-On first run, BPE trains and writes `.debtlint/debtlint.vocab.json`. Later runs reuse that cache when the corpus composition and BPE parameters stay compatible. Pass `--vocab-size` or `--save-vocab` to force a retrain.
+On first run, BPE trains and writes `.debtlint/debtlint.vocab.json`. Later runs reuse that cache when BPE parameters match and the corpus has not changed enough (file count at least doubled with ≥100 new files, or majority-language share shifted by more than 50 points / majority language changed). Pass `--vocab-size` or `--save-vocab` to force a retrain.
 
 ## How It Works
 

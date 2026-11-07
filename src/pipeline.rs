@@ -6,14 +6,14 @@ use crate::tokenizer::{BpeTrainingResult, SourceFile, encode_corpus, train_corpu
 use std::path::{Path, PathBuf};
 
 pub enum VocabularySource {
-    /// Load a vocabulary from an explicit path (`--load-vocab`).
+    /// Load vocab from `--load-vocab` path.
     Load(PathBuf),
-    /// Always train; optionally also write a legacy export to `save_path` (`--save-vocab`).
+    /// Always train; optional legacy export via `--save-vocab`.
     Train {
         save_path: Option<PathBuf>,
         cache_path: PathBuf,
     },
-    /// Load `.debtlint/debtlint.vocab.json` when compatible, otherwise train and persist it.
+    /// Use cached vocab when compatible, otherwise train and save.
     Auto {
         cache_path: PathBuf,
         force_retrain: bool,
@@ -53,7 +53,7 @@ fn train_and_cache(
     Ok(result)
 }
 
-/// Train BPE from scratch, load a vocabulary file, or reuse the project cache when compatible.
+/// Train, load, or reuse a compatible cached BPE vocabulary.
 pub fn run_bpe(
     files: &[SourceFile],
     bpe_config: BpeConfig,

@@ -36,13 +36,13 @@ fn default_excludes() -> Vec<String> {
     .collect()
 }
 
-/// Project analysis settings loaded from `.debtlint/debtlint.config.json` when present.
+/// Project settings from `.debtlint/debtlint.config.json`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Config {
-    /// Directory to analyze (same role as the CLI `DIR` argument).
+    /// Scan root (same role as CLI `DIR`).
     #[serde(default = "default_dir", alias = "src")]
     pub dir: PathBuf,
-    /// Directory names and extension globs to skip (gitignore-style).
+    /// Directories and globs to skip.
     #[serde(default = "default_excludes")]
     pub excludes: Vec<String>,
 }
@@ -79,18 +79,17 @@ fn parse_config(path: &Path, content: &str) -> Config {
 }
 
 fn write_config(path: &Path, config: &Config) -> std::io::Result<()> {
-    if let Some(parent) = path.parent() {
-        if !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
     }
     let json = serde_json::to_string_pretty(config)
         .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err))?;
     fs::write(path, format!("{json}\n"))
 }
 
-/// Load config from `.debtlint/debtlint.config.json`.
-/// On first run, writes the default config there (migrating a legacy root file if present).
+/// Load `.debtlint/debtlint.config.json`, creating defaults on first run.
 pub fn load_config() -> Config {
     let primary = default_config_path();
     if let Ok(content) = fs::read_to_string(&primary) {
@@ -110,10 +109,7 @@ pub fn load_config() -> Config {
     };
 
     if let Err(err) = write_config(&primary, &config) {
-        eprintln!(
-            "Warning: could not create {} ({err})",
-            primary.display()
-        );
+        eprintln!("Warning: could not create {} ({err})", primary.display());
     } else {
         eprintln!("Config written to: {}", primary.display());
     }

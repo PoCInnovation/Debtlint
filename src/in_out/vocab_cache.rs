@@ -9,16 +9,16 @@ use crate::tokenizer::vocabulary::{
     Token, VOCAB_EXPORT_VERSION, Vocabulary, VocabularyEntry, VocabularyExport,
 };
 
-/// Bumps when the on-disk vocabulary document shape changes.
+/// On-disk vocabulary document format version.
 pub const VOCAB_CACHE_FORMAT_VERSION: u32 = 1;
-/// Bumps when the BPE training / encoding algorithm changes incompatibly.
+/// BPE algorithm version (incompatible bump forces retrain).
 pub const ALGORITHM_VERSION: u32 = 1;
 
 fn json_err(err: serde_json::Error) -> io::Error {
     io::Error::new(ErrorKind::InvalidData, err)
 }
 
-/// Extension histogram of the ingested corpus (paths only — no extra I/O).
+/// Corpus shape from ingested paths only (no extra I/O).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CorpusProfile {
     pub file_count: usize,
@@ -47,7 +47,7 @@ impl CorpusProfile {
         self.extension_counts.keys().cloned().collect()
     }
 
-    /// Per-extension share of the corpus as an integer percentage in `[0, 100]`.
+    /// Per-extension share as an integer percentage in `[0, 100]`.
     pub fn language_distribution(&self) -> BTreeMap<String, u32> {
         if self.file_count == 0 {
             return BTreeMap::new();
@@ -62,13 +62,43 @@ impl CorpusProfile {
             .collect()
     }
 
-    /// Same file count and same integer percentages per extension.
-    pub fn matches_distribution(
+    /// Min absolute growth (with doubling) that invalidates the cache.
+    const FILE_COUNT_DELTA_LIMIT: usize = 100;
+    /// Majority-language %-point shift that invalidates the cache.
+    const MAJORITY_SHIFT_LIMIT: u32 = 50;
+
+    /// True if file count doubled with ≥100 growth, or majority language shifted by >50 points / changed.
+    pub fn requires_retrain(
         &self,
-        file_count: usize,
-        distribution: &BTreeMap<String, u32>,
+        cached_file_count: usize,
+        cached_distribution: &BTreeMap<String, u32>,
     ) -> bool {
-        self.file_count == file_count && &self.language_distribution() == distribution
+        if self.file_count >= cached_file_count.saturating_mul(2)
+            && self.file_count.saturating_sub(cached_file_count) >= Self::FILE_COUNT_DELTA_LIMIT
+        {
+            return true;
+        }
+
+        let Some((majority_ext, &majority_pct)) =
+            cached_distribution
+                .iter()
+                .max_by(|(ext_a, pct_a), (ext_b, pct_b)| {
+                    pct_a.cmp(pct_b).then_with(|| ext_a.cmp(ext_b))
+                })
+        else {
+            return !self.language_distribution().is_empty();
+        };
+
+        let current = self.language_distribution();
+        match current.iter().max_by(|(ext_a, pct_a), (ext_b, pct_b)| {
+            pct_a.cmp(pct_b).then_with(|| ext_a.cmp(ext_b))
+        }) {
+            Some((current_majority, _)) if current_majority != majority_ext => true,
+            _ => {
+                let current_pct = current.get(majority_ext).copied().unwrap_or(0);
+                majority_pct.abs_diff(current_pct) > Self::MAJORITY_SHIFT_LIMIT
+            }
+        }
     }
 }
 
@@ -141,8 +171,7 @@ impl VocabularyDocument {
             && self.algorithm_version == ALGORITHM_VERSION
             && self.vocab_size == vocab_size
             && self.min_frequency == min_frequency
-            && self.selected_extensions == profile.selected_extensions()
-            && profile.matches_distribution(self.file_count, &self.language_distribution)
+            && !profile.requires_retrain(self.file_count, &self.language_distribution)
     }
 }
 

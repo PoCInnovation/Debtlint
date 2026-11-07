@@ -47,7 +47,7 @@ Stdout is the report. Parse stdout only. Exit code 0 with duplicates is a succes
 debtlint --report-format json
 ```
 
-Vocabulary is cached at `.debtlint/debtlint.vocab.json` automatically. Treat it as an opaque cache; do not edit it. Debtlint reloads it when compatible, and retrains when missing, when `--vocab-size` / `--save-vocab` is set, when format/algorithm versions differ, or when the corpus file count / extension distribution changes. Leave `--min-frequency` (default 2), `--shingle-size` (default 50), `--window-size` (default 3), and `--min-tokens` (default 20) alone unless the user asks to change them.
+Vocabulary is cached at `.debtlint/debtlint.vocab.json` automatically. Treat it as an opaque cache; do not edit it. Debtlint reloads it when compatible, and retrains when missing, when `--vocab-size` / `--save-vocab` is set, when format/algorithm versions differ, when file count at least doubles with ≥100 new files, or when the majority language changes / its share shifts by more than 50 points. Leave `--min-frequency` (default 2), `--shingle-size` (default 50), `--window-size` (default 3), and `--min-tokens` (default 20) alone unless the user asks to change them.
 
 ## Output
 
