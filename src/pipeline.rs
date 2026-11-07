@@ -1,9 +1,9 @@
 use crate::in_out::{
-    CorpusProfile, VocabularyDocument, load_vocabulary, load_vocabulary_document,
-    save_vocabulary, save_vocabulary_document,
+    CorpusProfile, VocabularyDocument, load_vocabulary, load_vocabulary_document, save_vocabulary,
+    save_vocabulary_document,
 };
 use crate::tokenizer::{BpeTrainingResult, SourceFile, encode_corpus, train_corpus};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub enum VocabularySource {
     /// Load a vocabulary from an explicit path (`--load-vocab`).
@@ -33,8 +33,8 @@ pub struct BpeConfig {
 fn train_and_cache(
     files: &[SourceFile],
     bpe_config: &BpeConfig,
-    cache_path: &PathBuf,
-    legacy_save: Option<&PathBuf>,
+    cache_path: &Path,
+    legacy_save: Option<&Path>,
 ) -> std::io::Result<BpeTrainingResult> {
     let profile = CorpusProfile::from_files(files);
     let result = train_corpus(files, bpe_config.vocab_size, bpe_config.min_frequency);
@@ -69,25 +69,20 @@ pub fn run_bpe(
         VocabularySource::Train {
             save_path,
             cache_path,
-        } => train_and_cache(files, &bpe_config, &cache_path, save_path.as_ref()),
+        } => train_and_cache(files, &bpe_config, &cache_path, save_path.as_deref()),
 
         VocabularySource::Auto {
             cache_path,
             force_retrain,
         } => {
             let profile = CorpusProfile::from_files(files);
-            if !force_retrain {
-                if let Ok(document) = load_vocabulary_document(&cache_path) {
-                    if document.is_compatible(
-                        bpe_config.vocab_size,
-                        bpe_config.min_frequency,
-                        &profile,
-                    ) {
-                        let vocabulary = document.to_vocabulary()?;
-                        eprintln!("Vocabulary loaded from: {}", cache_path.display());
-                        return Ok(encode_corpus(files, vocabulary));
-                    }
-                }
+            if !force_retrain
+                && let Ok(document) = load_vocabulary_document(&cache_path)
+                && document.is_compatible(bpe_config.vocab_size, bpe_config.min_frequency, &profile)
+            {
+                let vocabulary = document.to_vocabulary()?;
+                eprintln!("Vocabulary loaded from: {}", cache_path.display());
+                return Ok(encode_corpus(files, vocabulary));
             }
             train_and_cache(files, &bpe_config, &cache_path, None)
         }

@@ -4,13 +4,13 @@ use std::fs;
 use std::io::{self, ErrorKind, Result};
 use std::path::Path;
 
+use crate::tokenizer::SourceFile;
 use crate::tokenizer::vocabulary::{
     Token, VOCAB_EXPORT_VERSION, Vocabulary, VocabularyEntry, VocabularyExport,
 };
-use crate::tokenizer::SourceFile;
 
 /// Bumps when the on-disk vocabulary document shape changes.
-pub const VOCAB_CACHE_FORMAT_VERSION: u32 = 2;
+pub const VOCAB_CACHE_FORMAT_VERSION: u32 = 1;
 /// Bumps when the BPE training / encoding algorithm changes incompatibly.
 pub const ALGORITHM_VERSION: u32 = 1;
 
@@ -47,34 +47,28 @@ impl CorpusProfile {
         self.extension_counts.keys().cloned().collect()
     }
 
-    pub fn language_distribution(&self) -> BTreeMap<String, f64> {
+    /// Per-extension share of the corpus as an integer percentage in `[0, 100]`.
+    pub fn language_distribution(&self) -> BTreeMap<String, u32> {
         if self.file_count == 0 {
             return BTreeMap::new();
         }
-        let total = self.file_count as f64;
+        let total = self.file_count;
         self.extension_counts
             .iter()
-            .map(|(ext, count)| (ext.clone(), *count as f64 / total))
+            .map(|(ext, count)| {
+                let percent = (count * 100 + total / 2) / total;
+                (ext.clone(), percent as u32)
+            })
             .collect()
     }
 
-    /// Exact composition check via integer counts reconstructed from stored ratios.
-    /// No arbitrary distance threshold: any change in file count or per-extension
-    /// counts invalidates the cache (BPE merges depend on corpus composition).
+    /// Same file count and same integer percentages per extension.
     pub fn matches_distribution(
         &self,
         file_count: usize,
-        distribution: &BTreeMap<String, f64>,
+        distribution: &BTreeMap<String, u32>,
     ) -> bool {
-        if self.file_count != file_count || self.extension_counts.len() != distribution.len() {
-            return false;
-        }
-        self.extension_counts.iter().all(|(ext, count)| {
-            distribution.get(ext).is_some_and(|ratio| {
-                let reconstructed = (ratio * file_count as f64).round() as usize;
-                reconstructed == *count
-            })
-        })
+        self.file_count == file_count && &self.language_distribution() == distribution
     }
 }
 
@@ -86,7 +80,7 @@ pub struct VocabularyDocument {
     pub min_frequency: usize,
     pub selected_extensions: Vec<String>,
     pub file_count: usize,
-    pub language_distribution: BTreeMap<String, f64>,
+    pub language_distribution: BTreeMap<String, u32>,
     pub entries: Vec<VocabularyEntry>,
     pub merge_start_id: Token,
 }
@@ -153,10 +147,10 @@ impl VocabularyDocument {
 }
 
 pub fn save_vocabulary_document(path: &Path, document: &VocabularyDocument) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        if !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
     }
     let json = serde_json::to_string_pretty(document).map_err(json_err)?;
     fs::write(path, json)

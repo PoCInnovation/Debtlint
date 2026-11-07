@@ -10,10 +10,10 @@ fn json_err(err: serde_json::Error) -> io::Error {
 }
 
 pub fn save_vocabulary(path: &Path, vocabulary: &Vocabulary) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        if !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
     }
     let json = serde_json::to_string_pretty(&vocabulary.to_export()).map_err(json_err)?;
     fs::write(path, json)
