@@ -38,7 +38,7 @@ cargo install --path .
 
 ## Quick start
 
-1. Optionally add a `debtlint.config.json` at the project root (built-in defaults apply if missing):
+1. Optionally add `.debtlint/debtlint.config.json` (built-in defaults apply if missing):
 
 ```json
 {
@@ -47,33 +47,23 @@ cargo install --path .
 }
 ```
 
-2. Optionally train and save your own vocabulary as `.debtlint-vocab.json`:
-
-```bash
-debtlint --save-vocab .debtlint-vocab.json
-```
-
-3. Run Debtlint (reuse the vocabulary to skip BPE training):
-
-```bash
-debtlint --load-vocab .debtlint-vocab.json
-```
-
-Or run without a saved vocabulary (trains BPE on the fly):
+2. Run Debtlint:
 
 ```bash
 debtlint
 ```
+
+On first run, BPE trains and writes `.debtlint/debtlint.vocab.json`. Later runs reuse that cache when the corpus composition and BPE parameters stay compatible. Pass `--vocab-size` or `--save-vocab` to force a retrain.
 
 ## How It Works
 
 The Debtlint pipeline follows four main steps:
 
 1. **Code ingestion**
-   Recursively discover source files under `dir` from `debtlint.config.json` (or `.` by default). The CLI `DIR` argument overrides `dir` when provided. Discovery is Git-independent. `.gitignore` still applies, and `excludes` lists directories and extension globs to skip (via `ignore` overrides). Symbolic links are not followed.
+   Recursively discover source files under `dir` from `.debtlint/debtlint.config.json` (or `.` by default). The CLI `DIR` argument overrides `dir` when provided. Discovery is Git-independent. `.gitignore` still applies, and `excludes` lists directories and extension globs to skip (via `ignore` overrides). Symbolic links are not followed.
 
 2. **BPE encoding**
-   Train (or load) a Byte Pair Encoding vocabulary to turn source into token sequences that capture recurring patterns.
+   Train a Byte Pair Encoding vocabulary on first run and persist it under `.debtlint/debtlint.vocab.json`, or reuse a compatible cached vocabulary.
 
 3. **Winnowing-based duplicate detection**
    Build hashed shingles over the token stream, select fingerprints with a sliding window, then extend matching regions into duplicated blocks.
@@ -98,11 +88,11 @@ debtlint [DIR] [OPTIONS]
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `DIR` | config / `.` | Directory to analyze (overrides `dir` in `debtlint.config.json`) |
-| `--vocab-size` | `1000` | Max vocabulary size (base + merges) |
+| `DIR` | config / `.` | Directory to analyze (overrides `dir` in config) |
+| `--vocab-size <N>` | `1000` | Max vocabulary size; forces retrain when set |
 | `--min-frequency` | `2` | Min pair frequency to create a merge |
-| `--load-vocab <PATH>` | — | Load a vocabulary JSON and skip BPE training |
-| `--save-vocab <PATH>` | — | Save the trained vocabulary as JSON |
+| `--load-vocab <PATH>` | — | Load a vocabulary JSON and skip cache/training |
+| `--save-vocab <PATH>` | — | Force retrain; also write a legacy export to PATH |
 | `--output-encoded <PATH>` | — | Write encoded token sequences as JSON |
 | `--shingle-size` | `50` | Shingle size in tokens (Winnowing) |
 | `--window-size` | `3` | Sliding window size in shingles |
@@ -112,20 +102,20 @@ debtlint [DIR] [OPTIONS]
 Examples:
 
 ```bash
-# Human-readable report (current directory)
+# Human-readable report (current directory; uses vocab cache)
 debtlint
 
 # Analyze a specific directory
 debtlint src
 
 # JSON for CI / agents
-debtlint --load-vocab debtlint-vocab.json --report-format json
+debtlint --report-format json
 
-# Train and persist a vocabulary
-debtlint --vocab-size 2000 --save-vocab vocab.json
+# Force retrain with a larger vocabulary
+debtlint --vocab-size 2000
 ```
 
-Configuration is optional (`debtlint.config.json`). When absent, Debtlint uses built-in defaults for `dir` and `excludes`. `excludes` accepts directory names (`target`) and globs (`*.json`).
+Configuration lives in `.debtlint/debtlint.config.json` (optional). The vocabulary cache is `.debtlint/debtlint.vocab.json`. `excludes` accepts directory names (`target`) and globs (`*.json`).
 
 ## GitHub Actions Integration
 

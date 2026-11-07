@@ -7,7 +7,7 @@ The action metadata lives at the repository root (`action.yml`).
 ## Requirements
 
 - The workflow must checkout the repository before calling this action.
-- Optional `debtlint.config.json` at the repository root (see the [main README](../README.md#quick-start)); built-in defaults apply if missing.
+- Optional `.debtlint/debtlint.config.json` (see the [main README](../README.md#quick-start)); built-in defaults apply if missing.
 - `pull_request` events (the action posts review comments on the PR).
 
 ## Inputs
