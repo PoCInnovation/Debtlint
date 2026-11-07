@@ -4,11 +4,12 @@ mod ingestion;
 
 use clap::Parser;
 use cli::{Args, ReportFormat};
-use config::get_config;
+use config::load_config;
 use debtlint::algorithm::{DetectionParams, DuplicateGroup, detect_duplicates, group_duplicates};
 use debtlint::in_out::format_groups_json;
 use debtlint::pipeline::run_bpe;
 use ingestion::ingest_codebase;
+use std::path::PathBuf;
 
 fn print_groups(groups: &[DuplicateGroup]) {
     println!("{} duplicated block(s) found", groups.len());
@@ -40,8 +41,9 @@ fn print_groups(groups: &[DuplicateGroup]) {
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    let cfg = get_config();
-    let files = ingest_codebase(cfg);
+    let config = load_config();
+    let root: PathBuf = args.dir.clone().unwrap_or_else(|| config.dir.clone());
+    let files = ingest_codebase(&root, &config);
     let result = run_bpe(&files, args.get_bpe_config(), args.get_pipeline_config())?;
 
     let params = DetectionParams {

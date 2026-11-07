@@ -38,12 +38,12 @@ cargo install --path .
 
 ## Quick start
 
-1. Create a `debtlint.config.json` at the root of the project:
+1. Optionally add a `debtlint.config.json` at the project root (built-in defaults apply if missing):
 
 ```json
 {
-  "src": ".",
-  "excludes": ["target", "node_modules", ".git"]
+  "dir": ".",
+  "excludes": ["target", "node_modules", "build", "*.json", "*.md"]
 }
 ```
 
@@ -70,7 +70,7 @@ debtlint
 The Debtlint pipeline follows four main steps:
 
 1. **Code ingestion**
-   Read tracked source files under `src` from `debtlint.config.json`, while respecting `excludes`.
+   Recursively discover source files under `dir` from `debtlint.config.json` (or `.` by default). The CLI `DIR` argument overrides `dir` when provided. Discovery is Git-independent. `.gitignore` still applies, and `excludes` lists directories and extension globs to skip (via `ignore` overrides). Symbolic links are not followed.
 
 2. **BPE encoding**
    Train (or load) a Byte Pair Encoding vocabulary to turn source into token sequences that capture recurring patterns.
@@ -93,11 +93,12 @@ More detail: [doc/bpe.md](./doc/bpe.md)
 ## CLI
 
 ```bash
-debtlint [OPTIONS]
+debtlint [DIR] [OPTIONS]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `DIR` | config / `.` | Directory to analyze (overrides `dir` in `debtlint.config.json`) |
 | `--vocab-size` | `1000` | Max vocabulary size (base + merges) |
 | `--min-frequency` | `2` | Min pair frequency to create a merge |
 | `--load-vocab <PATH>` | — | Load a vocabulary JSON and skip BPE training |
@@ -111,8 +112,11 @@ debtlint [OPTIONS]
 Examples:
 
 ```bash
-# Human-readable report
+# Human-readable report (current directory)
 debtlint
+
+# Analyze a specific directory
+debtlint src
 
 # JSON for CI / agents
 debtlint --load-vocab debtlint-vocab.json --report-format json
@@ -121,7 +125,7 @@ debtlint --load-vocab debtlint-vocab.json --report-format json
 debtlint --vocab-size 2000 --save-vocab vocab.json
 ```
 
-Configuration is read from `debtlint.config.json` in the current directory.
+Configuration is optional (`debtlint.config.json`). When absent, Debtlint uses built-in defaults for `dir` and `excludes`. `excludes` accepts directory names (`target`) and globs (`*.json`).
 
 ## GitHub Actions Integration
 

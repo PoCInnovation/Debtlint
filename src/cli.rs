@@ -19,6 +19,9 @@ pub enum ReportFormat {
     about = "Technical debt detection via BPE-inspired pattern analysis"
 )]
 pub struct Args {
+    /// Directory to analyze (overrides `dir` from debtlint.config.json; default `.`)
+    #[arg(value_name = "DIR")]
+    pub dir: Option<PathBuf>,
     #[arg(long, default_value_t = 1000)]
     pub vocab_size: u32,
     #[arg(long, default_value_t = 2)]

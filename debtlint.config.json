@@ -1,4 +1,20 @@
 {
-    "src": ".",
-    "excludes": []
+  "dir": ".",
+  "excludes": [
+    "build",
+    "target",
+    "node_modules",
+    "pycache",
+    "__pycache__",
+    "*.json",
+    "*.jsonl",
+    "*.lock",
+    "*.csv",
+    "*.md",
+    "*.markdown",
+    "*.txt",
+    "*.min.js",
+    "*.min.css",
+    "*.min.html"
+  ]
 }
