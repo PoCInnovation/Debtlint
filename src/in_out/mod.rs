@@ -7,7 +7,7 @@ mod writer;
 
 pub use reader::read_corpus;
 pub use report::format_groups_json;
-pub use stdio::format_groups_text;
+pub use stdio::{color_enabled, format_groups_text};
 pub use vocab_cache::{
     ALGORITHM_VERSION, CorpusProfile, VOCAB_CACHE_FORMAT_VERSION, VocabularyDocument,
     load_vocabulary_document, save_vocabulary_document,
