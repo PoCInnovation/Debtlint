@@ -5,39 +5,11 @@ mod ingestion;
 use clap::Parser;
 use cli::{Args, ReportFormat};
 use config::load_config;
-use debtlint::algorithm::{DetectionParams, DuplicateGroup, detect_duplicates, group_duplicates};
-use debtlint::in_out::format_groups_json;
+use debtlint::algorithm::{DetectionParams, detect_duplicates, group_duplicates};
+use debtlint::in_out::{format_groups_json, format_groups_text};
 use debtlint::pipeline::run_bpe;
 use ingestion::ingest_codebase;
 use std::path::PathBuf;
-
-fn print_groups(groups: &[DuplicateGroup]) {
-    println!("{} duplicated block(s) found", groups.len());
-    for (number, group) in groups.iter().enumerate() {
-        println!(
-            "\n#{} - {} copies (up to {} chars)",
-            number + 1,
-            group.instances.len(),
-            group.max_chars()
-        );
-        for instance in &group.instances {
-            match &instance.lines {
-                Some(lines) => println!(
-                    "  {}:{}-{}",
-                    instance.path.display(),
-                    lines.start(),
-                    lines.end()
-                ),
-                None => println!(
-                    "  {} (chars {}..{})",
-                    instance.path.display(),
-                    instance.chars.start,
-                    instance.chars.end
-                ),
-            }
-        }
-    }
-}
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
@@ -55,7 +27,7 @@ fn main() -> std::io::Result<()> {
     let duplicates = detect_duplicates(&result, &params);
     let groups = group_duplicates(&duplicates, &files);
     match args.report_format {
-        ReportFormat::Text => print_groups(&groups),
+        ReportFormat::Text => println!("{}", format_groups_text(&groups)),
         ReportFormat::Json => println!("{}", format_groups_json(&groups)?),
     }
     Ok(())
