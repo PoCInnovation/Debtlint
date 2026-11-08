@@ -26,45 +26,28 @@ cargo install debtlint
 
 ## Prepare
 
-Run from the project root. There is no path argument. The scan root comes from `debtlint.config.json` in the current directory. If that file is missing, the process panics.
+Run from the project root. Debtlint reads optional `.debtlint/debtlint.config.json` (`dir` + `excludes`). Without it, built-in defaults apply. CLI `DIR` overrides `dir`. File discovery is Git-independent. `.gitignore` still applies; `excludes` covers directories and extension globs. Symbolic links are not followed.
 
-Create it only when it is absent. Do not overwrite an existing one.
+Create `.debtlint/debtlint.config.json` only when absent if the project needs custom excludes or a non-default `dir`. Do not overwrite an existing one.
 
 ```json
 {
-  "src": ".",
-  "excludes": ["target", "node_modules", ".git", "dist", "build", "vendor"]
+  "dir": ".",
+  "excludes": ["target", "node_modules", "build", "*.json", "*.md"]
 }
 ```
 
-- `src`: directory to scan.
-- `excludes`: directories skipped during ingestion. Missing entries are ignored.
-
-In a git repository only tracked paths are read (`git ls-files`). Edits to tracked files are visible immediately. A new untracked file is invisible until it is staged. After creating files, stage those paths only:
-
-```sh
-git add -- path/to/new_file
-```
-
-Do not commit. Outside git, Debtlint walks `src` and skips dot-directories. NOTIFIES THE USER THAT FILES HAVE BEEN ADDED
+After creating files, they are visible on the next scan without staging. Do not commit unless the user asks.
 
 ## Scan
 
-Stdout is the report. Parse stdout only. Exit code 0 with duplicates is a successful scan. A non-zero exit is a crash (missing config, invalid vocabulary JSON, I/O).
-
-Reuse a vocabulary when `.debtlint-vocab.json` exists. `--load-vocab` and `--save-vocab` conflict.
+Stdout is the report. Parse stdout only. Exit code 0 with duplicates is a successful scan. A non-zero exit is a crash (invalid vocabulary JSON, I/O).
 
 ```sh
-debtlint --load-vocab .debtlint-vocab.json --report-format json
+debtlint --report-format json
 ```
 
-Otherwise train once and save the vocabulary. Treat that file as an opaque cache; do not edit it.
-
-```sh
-debtlint --save-vocab .debtlint-vocab.json --report-format json
-```
-
-Retrain (the `--save-vocab` command, without `--load-vocab`) only after a large corpus change. Leave `--vocab-size` (default 1000), `--min-frequency` (default 2), `--shingle-size` (default 50), `--window-size` (default 3), and `--min-tokens` (default 20) alone unless the user asks to change them.
+Vocabulary is cached at `.debtlint/debtlint.vocab.json` automatically. Treat it as an opaque cache; do not edit it. Debtlint reloads it when compatible, and retrains when missing, when `--vocab-size` / `--save-vocab` is set, when format/algorithm versions differ, when file count at least doubles with ≥100 new files, or when the majority language changes / its share shifts by more than 50 points. Leave `--min-frequency` (default 2), `--shingle-size` (default 50), `--window-size` (default 3), and `--min-tokens` (default 20) alone unless the user asks to change them.
 
 ## Output
 

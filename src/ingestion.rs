@@ -1,118 +1,73 @@
 use crate::config::Config;
 use debtlint::tokenizer::SourceFile;
-use std::fs::{self, ReadDir};
-use std::path::Path;
-use std::path::PathBuf;
+use ignore::WalkBuilder;
+use ignore::overrides::OverrideBuilder;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-fn get_file(path: &str) -> Option<SourceFile> {
+fn get_file(path: &Path) -> Option<SourceFile> {
     let text = fs::read_to_string(path).ok()?;
     Some(SourceFile::from_text(PathBuf::from(path), &text))
 }
 
-fn get_excluded_paths(excluded: Vec<String>) -> Vec<String> {
-    let Ok(cwd) = std::env::current_dir() else {
-        return Vec::new();
-    };
-    excluded
-        .iter()
-        .filter_map(|l| {
-            let canonical = fs::canonicalize(cwd.join(l)).ok()?;
-            Some(canonical.to_string_lossy().to_string())
+/// Map a config exclude to an `ignore` override glob (`!…`).
+fn to_ignore_glob(exclude: &str) -> Option<String> {
+    let pattern = exclude.trim();
+    if pattern.is_empty() || pattern.starts_with('#') {
+        return None;
+    }
+    if pattern.starts_with('!') {
+        return Some(pattern.to_string());
+    }
+    if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
+        return Some(format!("!{pattern}"));
+    }
+    let pattern = pattern.trim_matches('/');
+    if pattern.is_empty() {
+        return None;
+    }
+    // Bare names are treated as directories ignored anywhere in the tree.
+    Some(format!("!{pattern}/"))
+}
+
+fn build_overrides(root: &Path, excludes: &[String]) -> ignore::overrides::Override {
+    let mut builder = OverrideBuilder::new(root);
+    for exclude in excludes {
+        let Some(glob) = to_ignore_glob(exclude) else {
+            continue;
+        };
+        if let Err(err) = builder.add(&glob) {
+            eprintln!("Warning: invalid exclude `{exclude}` ({err})");
+        }
+    }
+    builder.build().unwrap_or_else(|err| {
+        eprintln!("Warning: could not build exclude overrides ({err})");
+        OverrideBuilder::new(root)
+            .build()
+            .expect("empty override builder")
+    })
+}
+
+pub fn ingest_codebase(root: &Path, config: &Config) -> Vec<SourceFile> {
+    if !root.exists() {
+        eprintln!("Error: {} doesn't exist.", root.display());
+        return vec![];
+    }
+
+    let overrides = build_overrides(root, &config.excludes);
+
+    WalkBuilder::new(root)
+        .follow_links(false)
+        .standard_filters(true)
+        .overrides(overrides)
+        .build()
+        .filter_map(|result| {
+            let entry = result.ok()?;
+            let file_type = entry.file_type()?;
+            if !file_type.is_file() {
+                return None;
+            }
+            get_file(entry.path())
         })
         .collect()
-}
-
-fn is_path_excluded(path: &str, excluded_paths: &[String]) -> bool {
-    let candidate = Path::new(path);
-    excluded_paths
-        .iter()
-        .any(|excluded| is_inside_folder(candidate, Path::new(excluded)))
-}
-
-fn is_inside_folder(path: &Path, folder: &Path) -> bool {
-    let (Ok(canonical_path), Ok(canonical_folder)) = (path.canonicalize(), folder.canonicalize())
-    else {
-        return false;
-    };
-    canonical_path.starts_with(&canonical_folder)
-}
-
-fn collect_source_files(src: String, excluded: Vec<String>) -> Vec<SourceFile> {
-    let mut codebase: Vec<SourceFile> = vec![];
-    let Ok(output) = std::process::Command::new("git").arg("ls-files").output() else {
-        return vec![];
-    };
-
-    String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .for_each(|path| {
-            if is_path_excluded(path, &excluded) {
-                return;
-            }
-            if !is_inside_folder(Path::new(path), Path::new(&src)) {
-                return;
-            }
-            let Some(source_file) = get_file(path) else {
-                return;
-            };
-            codebase.push(source_file);
-        });
-    codebase
-}
-
-fn collect_source_files_fallback(
-    dir: ReadDir,
-    excluded_paths: &Vec<String>,
-    codebase: &mut Vec<SourceFile>,
-) {
-    for entry in dir.flatten() {
-        let file_path = entry.path();
-        let file_name = entry.file_name();
-        let Some(file_path_str) = file_path.to_str() else {
-            continue;
-        };
-        let Some(file_name_str) = file_name.to_str() else {
-            continue;
-        };
-        let Ok(file_type) = entry.file_type() else {
-            continue;
-        };
-        if is_path_excluded(file_path_str, excluded_paths) {
-            continue;
-        };
-        if file_type.is_dir() && !file_name_str.starts_with('.') {
-            let Ok(dir) = entry.path().read_dir() else {
-                continue;
-            };
-            collect_source_files_fallback(dir, excluded_paths, codebase);
-            continue;
-        }
-        let Some(source_file) = get_file(file_path_str) else {
-            continue;
-        };
-        codebase.push(source_file);
-    }
-}
-
-pub fn ingest_codebase(cfg: Config) -> Vec<SourceFile> {
-    let mut codebase: Vec<SourceFile> = vec![];
-    let is_git_repo = std::process::Command::new("git")
-        .args(["rev-parse", "--is-inside-work-tree"])
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false);
-
-    let excluded_paths = get_excluded_paths(cfg.excludes);
-    if !Path::new(&cfg.src).exists() {
-        eprintln!("Config error: {} doesn't exist.", cfg.src);
-    }
-    if is_git_repo {
-        codebase = collect_source_files(cfg.src, excluded_paths);
-    } else {
-        let Ok(dir) = fs::read_dir(cfg.src) else {
-            return vec![];
-        };
-        collect_source_files_fallback(dir, &excluded_paths, &mut codebase);
-    }
-    codebase
 }

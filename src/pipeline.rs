@@ -1,10 +1,23 @@
-use crate::in_out::{load_vocabulary, save_vocabulary};
+use crate::in_out::{
+    CorpusProfile, VocabularyDocument, load_vocabulary, load_vocabulary_document, save_vocabulary,
+    save_vocabulary_document,
+};
 use crate::tokenizer::{BpeTrainingResult, SourceFile, encode_corpus, train_corpus};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub enum VocabularySource {
-    Load(PathBuf), // path of load enum is mandatory because it need do be here when -load-vocab is present.
-    Train(Option<PathBuf>), // path of train is optional because we can train the vocab without saving it.
+    /// Load vocab from `--load-vocab` path.
+    Load(PathBuf),
+    /// Always train; optional legacy export via `--save-vocab`.
+    Train {
+        save_path: Option<PathBuf>,
+        cache_path: PathBuf,
+    },
+    /// Use cached vocab when compatible, otherwise train and save.
+    Auto {
+        cache_path: PathBuf,
+        force_retrain: bool,
+    },
 }
 
 pub struct PipelineConfig {
@@ -17,7 +30,30 @@ pub struct BpeConfig {
     pub min_frequency: usize,
 }
 
-/// Train BPE from scratch, or encode with a pre-loaded vocabulary file.
+fn train_and_cache(
+    files: &[SourceFile],
+    bpe_config: &BpeConfig,
+    cache_path: &Path,
+    legacy_save: Option<&Path>,
+) -> std::io::Result<BpeTrainingResult> {
+    let profile = CorpusProfile::from_files(files);
+    let result = train_corpus(files, bpe_config.vocab_size, bpe_config.min_frequency);
+    let document = VocabularyDocument::from_trained(
+        &result.vocabulary,
+        bpe_config.vocab_size,
+        bpe_config.min_frequency,
+        &profile,
+    );
+    save_vocabulary_document(cache_path, &document)?;
+    eprintln!("Vocabulary saved to: {}", cache_path.display());
+    if let Some(path) = legacy_save {
+        save_vocabulary(path, &result.vocabulary)?;
+        eprintln!("Vocabulary export saved to: {}", path.display());
+    }
+    Ok(result)
+}
+
+/// Train, load, or reuse a compatible cached BPE vocabulary.
 pub fn run_bpe(
     files: &[SourceFile],
     bpe_config: BpeConfig,
@@ -30,13 +66,25 @@ pub fn run_bpe(
             Ok(encode_corpus(files, vocabulary))
         }
 
-        VocabularySource::Train(save_path) => {
-            let result = train_corpus(files, bpe_config.vocab_size, bpe_config.min_frequency);
-            if let Some(path) = save_path {
-                eprintln!("Vocabulary saved to: {}", path.display());
-                save_vocabulary(&path, &result.vocabulary)?;
+        VocabularySource::Train {
+            save_path,
+            cache_path,
+        } => train_and_cache(files, &bpe_config, &cache_path, save_path.as_deref()),
+
+        VocabularySource::Auto {
+            cache_path,
+            force_retrain,
+        } => {
+            let profile = CorpusProfile::from_files(files);
+            if !force_retrain
+                && let Ok(document) = load_vocabulary_document(&cache_path)
+                && document.is_compatible(bpe_config.vocab_size, bpe_config.min_frequency, &profile)
+            {
+                let vocabulary = document.to_vocabulary()?;
+                eprintln!("Vocabulary loaded from: {}", cache_path.display());
+                return Ok(encode_corpus(files, vocabulary));
             }
-            Ok(result)
+            train_and_cache(files, &bpe_config, &cache_path, None)
         }
     }
 }
