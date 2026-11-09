@@ -15,24 +15,94 @@ fn default_dir() -> PathBuf {
 
 fn default_excludes() -> Vec<String> {
     [
-        "build",
+        // Build artifacts and dependencies
         "target",
         "node_modules",
-        "pycache",
+        "vendor",
+        "bower_components",
+        "jspm_packages",
+        "dist",
+        "build",
+
+        // Debtlint
+        ".debtlint",
+
+        // Python environments and caches
+        ".venv",
+        "venv",
         "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".tox",
+        ".nox",
+
+        // JavaScript / frontend frameworks
+        ".next",
+        ".nuxt",
+        ".output",
+        ".svelte-kit",
+        ".angular",
+        ".parcel-cache",
+        ".turbo",
+        ".vercel",
+        "storybook-static",
+
+        // Generic caches and generated reports
+        ".cache",
+        "coverage",
+        "htmlcov",
+
+        // Other build systems
+        ".gradle",
+        "Pods",
+        "Carthage",
+        "DerivedData",
+
+        // Data and configuration files
         "*.json",
         "*.jsonl",
-        "*.lock",
-        "*.csv",
-        "*.md",
-        "*.markdown",
-        "*.txt",
         "*.yaml",
         "*.yml",
-        "*.sql",
+        "*.ipynb",
+        "*.csv",
+        "*.tsv",
+        "*.lock",
+
+        // Documentation
+        "*.md",
+        "*.markdown",
+        "*.rst",
+        "*.adoc",
+        "*.txt",
+
+        // Generated and minified files
         "*.min.js",
         "*.min.css",
         "*.min.html",
+        "*.map",
+
+        // Logs and compiled Python files
+        "*.log",
+        "*.pyc",
+        "*.pyo",
+
+        // Binary files and datasets
+        "*.svg",
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.gif",
+        "*.webp",
+        "*.ico",
+        "*.pdf",
+        "*.parquet",
+        "*.db",
+        "*.sqlite",
+        "*.sqlite3",
+        "*.wasm",
+        "*.zip",
+        "*.gz",
     ]
     .into_iter()
     .map(str::to_string)
