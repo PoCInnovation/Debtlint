@@ -23,10 +23,8 @@ fn default_excludes() -> Vec<String> {
         "jspm_packages",
         "dist",
         "build",
-
         // Debtlint
         ".debtlint",
-
         // Python environments and caches
         ".venv",
         "venv",
@@ -36,7 +34,6 @@ fn default_excludes() -> Vec<String> {
         ".ruff_cache",
         ".tox",
         ".nox",
-
         // JavaScript / frontend frameworks
         ".next",
         ".nuxt",
@@ -47,18 +44,15 @@ fn default_excludes() -> Vec<String> {
         ".turbo",
         ".vercel",
         "storybook-static",
-
         // Generic caches and generated reports
         ".cache",
         "coverage",
         "htmlcov",
-
         // Other build systems
         ".gradle",
         "Pods",
         "Carthage",
         "DerivedData",
-
         // Data and configuration files
         "*.json",
         "*.jsonl",
@@ -68,25 +62,21 @@ fn default_excludes() -> Vec<String> {
         "*.csv",
         "*.tsv",
         "*.lock",
-
         // Documentation
         "*.md",
         "*.markdown",
         "*.rst",
         "*.adoc",
         "*.txt",
-
         // Generated and minified files
         "*.min.js",
         "*.min.css",
         "*.min.html",
         "*.map",
-
         // Logs and compiled Python files
         "*.log",
         "*.pyc",
         "*.pyo",
-
         // Binary files and datasets
         "*.svg",
         "*.png",
