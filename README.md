@@ -4,25 +4,8 @@
 
 # Debtlint
 
-**Debtlint** is a technical debt detection tool focused on duplicated logic, built for the era of AI code generation.
-It identifies repeated or near-duplicate code segments across a codebase and reports them for refactoring.
-
-## Vision
-
-As coding assistants become mainstream, "silent" duplication appears quickly:
-- existing utility functions get rewritten,
-- business patterns are repeated,
-- logic becomes fragmented across multiple files.
-
-Debtlint provides a **programmatic, fast, and cost-efficient** way to prevent this drift and keep architecture healthy over time.
-
-## Objectives
-
-- Detect exact duplications and structural similarities.
-- Surface duplicated blocks with file and line locations.
-- Provide actionable reports (terminal + JSON) for local use and CI.
-- Integrate easily into team workflows (local, CI, agents).
-- Stay as language-agnostic as possible.
+**Debtlint** finds duplicated and near-duplicate code across a codebase.
+It is built for the era of AI code generation: fast, language-agnostic, and easy to plug into local workflows, CI, and agents.
 
 ## Install
 
@@ -30,7 +13,7 @@ Debtlint provides a **programmatic, fast, and cost-efficient** way to prevent th
 cargo install debtlint
 ```
 
-Or from the repository:
+From this repository:
 
 ```bash
 cargo install --path .
@@ -38,7 +21,38 @@ cargo install --path .
 
 ## Quick start
 
-1. Optionally add `.debtlint/debtlint.config.json` (built-in defaults apply if missing):
+No config file required. From any project root:
+
+```bash
+debtlint
+```
+
+That is the full happy path: install, then run.
+
+Useful variants:
+
+```bash
+debtlint src                      # analyze a subdirectory
+debtlint --report-format json     # JSON for CI / agents
+```
+
+On first run, Debtlint trains a BPE vocabulary and writes `.debtlint/debtlint.vocab.json` (and creates `.debtlint/debtlint.config.json` with defaults if missing). Later runs reuse the cache automatically.
+
+## When the vocabulary cache refreshes
+
+Debtlint reuses `.debtlint/debtlint.vocab.json` when it is still compatible. It retrains when:
+
+- the cache file is missing,
+- you pass `--vocab-size` or `--save-vocab` (force retrain),
+- format / algorithm versions differ,
+- the file count at least **doubled** and grew by **≥ 100** files,
+- the majority language changed, or its share shifted by **more than 50** percentage points.
+
+Treat the vocab file as an opaque cache; do not edit it by hand.
+
+## Configuration (optional)
+
+Built-in defaults apply if `.debtlint/debtlint.config.json` is absent. Override only when you need a custom scan root or excludes:
 
 ```json
 {
@@ -47,38 +61,29 @@ cargo install --path .
 }
 ```
 
-2. Run Debtlint:
+- `dir`: scan root (overridden by the CLI `DIR` argument).
+- `excludes`: directory names (`target`) and globs (`*.json`).
 
-```bash
-debtlint
+### Default excludes
+
+```
+build, target, node_modules, pycache, __pycache__,
+*.json, *.jsonl, *.lock, *.csv, *.md, *.markdown, *.txt,
+*.min.js, *.min.css, *.min.html
 ```
 
-On first run, BPE trains and writes `.debtlint/debtlint.vocab.json`. Later runs reuse that cache when BPE parameters match and the corpus has not changed enough (file count at least doubled with ≥100 new files, or majority-language share shifted by more than 50 points / majority language changed). Pass `--vocab-size` or `--save-vocab` to force a retrain.
+If meaningful source lives in excluded extensions (for example `.txt`), remove those globs from your config.
 
-## How It Works
+A legacy `debtlint.config.json` at the repo root is still accepted and migrated into `.debtlint/` on first run.
 
-The Debtlint pipeline follows four main steps:
+## How it works
 
-1. **Code ingestion**
-   Recursively discover source files under `dir` from `.debtlint/debtlint.config.json` (or `.` by default). The CLI `DIR` argument overrides `dir` when provided. Discovery is Git-independent. `.gitignore` still applies, and `excludes` lists directories and extension globs to skip (via `ignore` overrides). Symbolic links are not followed.
+1. **Ingestion** — walk the tree (Git-independent), respect `.gitignore` and `excludes`. Symlinks are not followed.
+2. **BPE encoding** — train or reuse a vocabulary that surfaces recurring token patterns.
+3. **Winnowing** — fingerprint shingles and extend matches into duplicated blocks.
+4. **Report** — human-readable text by default, or JSON (`--report-format json`).
 
-2. **BPE encoding**
-   Train a Byte Pair Encoding vocabulary on first run and persist it under `.debtlint/debtlint.vocab.json`, or reuse a compatible cached vocabulary.
-
-3. **Winnowing-based duplicate detection**
-   Build hashed shingles over the token stream, select fingerprints with a sliding window, then extend matching regions into duplicated blocks.
-
-4. **Reporting**
-   Print a human-readable summary by default, or JSON for CI and agents (`--report-format json`).
-
-## Why BPE
-
-BPE is historically a compression and tokenization technique, notably used to segment large amounts of text efficiently.
-In Debtlint, this logic helps highlight repetitive structures and grammatical blocks of code.
-
-Core reference: [Byte pair encoding - Wikipedia](https://en.wikipedia.org/wiki/Byte_pair_encoding)
-
-More detail: [doc/bpe.md](./doc/bpe.md)
+More detail: [doc/bpe.md](./doc/bpe.md) · [doc/hyperparams.md](./doc/hyperparams.md)
 
 ## CLI
 
@@ -99,27 +104,16 @@ debtlint [DIR] [OPTIONS]
 | `--min-tokens` | `20` | Minimum duplicated block length in tokens |
 | `--report-format` | `text` | `text` or `json` |
 
-Examples:
-
 ```bash
-# Human-readable report (current directory; uses vocab cache)
 debtlint
-
-# Analyze a specific directory
 debtlint src
-
-# JSON for CI / agents
 debtlint --report-format json
-
-# Force retrain with a larger vocabulary
-debtlint --vocab-size 2000
+debtlint --vocab-size 2000          # force retrain with a larger vocab
 ```
 
-Configuration lives in `.debtlint/debtlint.config.json` (optional). The vocabulary cache is `.debtlint/debtlint.vocab.json`. `excludes` accepts directory names (`target`) and globs (`*.json`).
+## GitHub Actions
 
-## GitHub Actions Integration
-
-Use the action in this repository (`action.yml` at the root) to analyze pull requests.
+Use the action in this repository (`action.yml` at the root).
 See [action/README.md](./action/README.md) for inputs and details.
 
 ```yaml
@@ -141,20 +135,24 @@ jobs:
 
       - name: Run debtlint
         uses: PoCInnovation/Debtlint@v1
-        with:
-          vocab-path: .debtlint-vocab.json
 ```
 
+`vocab-path` is optional. Omit it to let Debtlint train/cache normally; set it only to force `--load-vocab`.
 
 ## Agent integration
 
-Debtlint can sit in an agent loop after code generation:
-- generate code,
-- run `debtlint --report-format json`,
-- refactor reported duplicates,
-- re-run until clean (or after a fixed number of iterations).
+Prefer the **skill + CLI in the agent sandbox** (not MCP):
 
-An agent skill lives in [`skills/debtlint`](./skills/debtlint).
+1. generate or edit code,
+2. run `debtlint --report-format json`,
+3. refactor reported duplicates,
+4. re-run until clean (or after a few iterations).
+
+Skill: [`skills/debtlint`](./skills/debtlint).
+
+## Vision
+
+As coding assistants become mainstream, silent duplication appears quickly: utilities get rewritten, patterns repeat, logic fragments across files. Debtlint gives a programmatic, fast, and cheap way to catch that drift early.
 
 ## License
 
