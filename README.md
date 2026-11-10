@@ -52,27 +52,29 @@ Treat the vocab file as an opaque cache; do not edit it by hand.
 
 ## Configuration (optional)
 
-Built-in defaults apply if `.debtlint/debtlint.config.json` is absent. Override only when you need a custom scan root or excludes:
+Built-in defaults apply if `.debtlint/debtlint.config.json` is absent. Override only when you need a custom scan root or excludes.
+
+- `dir`: scan root (overridden by the CLI `DIR` argument).
+- `excludes`: directory names (`target`) and globs (`*.json`). **Replaces** the built-in list (no merge).
+
+### Default excludes (summary)
+
+Skipped by default: build dirs (`target`, `node_modules`, `dist`, …), tool caches, Debtlint’s own `.debtlint/`, plus globs such as `*.json`, `*.yaml`, `*.md`, `*.txt`, images, lockfiles, minified assets, and common binaries.
+
+Full list: [doc/excludes.md](./doc/excludes.md).
+
+### Override example
+
+If your code lives in `.txt` files, remove `*.txt` from excludes (copy the defaults, drop that glob):
 
 ```json
 {
   "dir": ".",
-  "excludes": ["target", "node_modules", "build", "*.json", "*.md"]
+  "excludes": ["target", "node_modules", "dist", "build", ".debtlint", "*.json", "*.md"]
 }
 ```
 
-- `dir`: scan root (overridden by the CLI `DIR` argument).
-- `excludes`: directory names (`target`) and globs (`*.json`).
-
-### Default excludes
-
-```
-build, target, node_modules, pycache, __pycache__,
-*.json, *.jsonl, *.lock, *.csv, *.md, *.markdown, *.txt,
-*.min.js, *.min.css, *.min.html
-```
-
-If meaningful source lives in excluded extensions (for example `.txt`), remove those globs from your config.
+> Same idea for `*.md` if you want Markdown scanned. Setting a short `excludes` list drops every other default glob — see [doc/excludes.md](./doc/excludes.md) for a full copy-paste list without `*.txt`.
 
 A legacy `debtlint.config.json` at the repo root is still accepted and migrated into `.debtlint/` on first run.
 
@@ -83,7 +85,7 @@ A legacy `debtlint.config.json` at the repo root is still accepted and migrated 
 3. **Winnowing** — fingerprint shingles and extend matches into duplicated blocks.
 4. **Report** — human-readable text by default, or JSON (`--report-format json`).
 
-More detail: [doc/bpe.md](./doc/bpe.md) · [doc/hyperparams.md](./doc/hyperparams.md)
+More detail: [doc/bpe.md](./doc/bpe.md) · [doc/hyperparams.md](./doc/hyperparams.md) · [doc/excludes.md](./doc/excludes.md)
 
 ## CLI
 
