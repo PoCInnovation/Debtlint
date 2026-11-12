@@ -131,6 +131,10 @@ pub fn default_vocab_path() -> PathBuf {
     debtlint_dir().join(VOCAB_FILE_NAME)
 }
 
+fn config_path_in(root: &Path) -> PathBuf {
+    root.join(DEBTLINT_DIR).join(CONFIG_FILE_NAME)
+}
+
 fn parse_config(path: &Path, content: &str) -> Config {
     serde_json::from_str(content).unwrap_or_else(|err| {
         eprintln!(
@@ -152,21 +156,25 @@ fn write_config(path: &Path, config: &Config) -> std::io::Result<()> {
     fs::write(path, format!("{json}\n"))
 }
 
-/// Load `.debtlint/debtlint.config.json`, creating defaults on first run.
-pub fn load_config() -> Config {
-    let primary = default_config_path();
+/// Load config relative to `root` (creates `.debtlint/` on first run).
+pub fn load_config_from(root: &Path) -> Config {
+    let primary = if root == Path::new(".") {
+        default_config_path()
+    } else {
+        config_path_in(root)
+    };
     if let Ok(content) = fs::read_to_string(&primary) {
         return parse_config(&primary, &content);
     }
 
-    let legacy = Path::new(LEGACY_CONFIG_FILE);
-    let config = if let Ok(content) = fs::read_to_string(legacy) {
+    let legacy = root.join(LEGACY_CONFIG_FILE);
+    let config = if let Ok(content) = fs::read_to_string(&legacy) {
         eprintln!(
             "Migrating legacy {} -> {}",
             legacy.display(),
             primary.display()
         );
-        parse_config(legacy, &content)
+        parse_config(&legacy, &content)
     } else {
         Config::default()
     };
@@ -177,4 +185,48 @@ pub fn load_config() -> Config {
         eprintln!("Config written to: {}", primary.display());
     }
     config
+}
+
+/// Load `.debtlint/debtlint.config.json`, creating defaults on first run.
+pub fn load_config() -> Config {
+    load_config_from(Path::new("."))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_root(label: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("debtlint-{label}-{nanos}"));
+        fs::create_dir_all(&root).expect("temp root");
+        root
+    }
+
+    #[test]
+    fn migrates_legacy_config_into_debtlint_dir() {
+        let root = temp_root("migrate");
+        let legacy = root.join(LEGACY_CONFIG_FILE);
+        fs::write(
+            &legacy,
+            r#"{ "dir": "src", "excludes": ["target", "*.lock"] }"#,
+        )
+        .expect("write legacy");
+
+        let config = load_config_from(&root);
+        let migrated = root.join(DEBTLINT_DIR).join(CONFIG_FILE_NAME);
+
+        assert_eq!(config.dir, PathBuf::from("src"));
+        assert_eq!(
+            config.excludes,
+            vec!["target".to_string(), "*.lock".to_string()]
+        );
+        assert!(migrated.is_file());
+
+        let _ = fs::remove_dir_all(&root);
+    }
 }

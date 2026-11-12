@@ -71,3 +71,27 @@ pub fn ingest_codebase(root: &Path, config: &Config) -> Vec<SourceFile> {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalid_exclude_glob_does_not_panic() {
+        let root = Path::new(".");
+        let excludes = vec![
+            "[[[invalid".to_string(),
+            "".to_string(),
+            "# comment".to_string(),
+            "target".to_string(),
+        ];
+        let _ = build_overrides(root, &excludes);
+    }
+
+    #[test]
+    fn bare_name_becomes_directory_glob() {
+        assert_eq!(to_ignore_glob("target").as_deref(), Some("!target/"));
+        assert_eq!(to_ignore_glob("*.json").as_deref(), Some("!*.json"));
+        assert_eq!(to_ignore_glob(""), None);
+    }
+}

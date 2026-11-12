@@ -189,3 +189,87 @@ pub fn load_vocabulary_document(path: &Path) -> Result<VocabularyDocument> {
     let json = fs::read_to_string(path)?;
     serde_json::from_str(&json).map_err(json_err)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn profile(file_count: usize, extension_counts: &[(&str, usize)]) -> CorpusProfile {
+        CorpusProfile {
+            file_count,
+            extension_counts: extension_counts
+                .iter()
+                .map(|(ext, count)| ((*ext).to_string(), *count))
+                .collect(),
+        }
+    }
+
+    fn dist(entries: &[(&str, u32)]) -> BTreeMap<String, u32> {
+        entries
+            .iter()
+            .map(|(ext, pct)| ((*ext).to_string(), *pct))
+            .collect()
+    }
+
+    fn cached_doc(vocab_size: u32, min_frequency: usize,
+        file_count: usize, language_distribution: BTreeMap<String, u32>)
+        -> VocabularyDocument {
+        VocabularyDocument {
+            format_version: VOCAB_CACHE_FORMAT_VERSION,
+            algorithm_version: ALGORITHM_VERSION,
+            vocab_size,
+            min_frequency,
+            selected_extensions: language_distribution.keys().cloned().collect(),
+            file_count,
+            language_distribution,
+            entries: vec![],
+            merge_start_id: 0,
+        }
+    }
+
+    #[test]
+    fn retrain_when_file_count_doubles_with_large_delta() {
+        let current = profile(200, &[("rs", 200)]);
+        assert!(current.requires_retrain(80, &dist(&[("rs", 100)])));
+    }
+
+    #[test]
+    fn keep_cache_when_growth_is_small() {
+        let current = profile(60, &[("rs", 60)]);
+        assert!(!current.requires_retrain(50, &dist(&[("rs", 100)])));
+    }
+
+    #[test]
+    fn retrain_when_majority_language_changes() {
+        let current = profile(10, &[("py", 9), ("rs", 1)]);
+        assert!(current.requires_retrain(10, &dist(&[("rs", 90), ("py", 10)])));
+    }
+
+    #[test]
+    fn retrain_when_majority_share_shifts_a_lot() {
+        let current = profile(10, &[("rs", 3), ("py", 7)]);
+        assert!(current.requires_retrain(10, &dist(&[("rs", 90), ("py", 10)])));
+    }
+
+    #[test]
+    fn compatible_when_params_and_corpus_match() {
+        let doc = cached_doc(1000, 2, 10, dist(&[("rs", 100)]));
+        let current = profile(12, &[("rs", 12)]);
+        assert!(doc.is_compatible(1000, 2, &current));
+    }
+
+    #[test]
+    fn incompatible_when_vocab_size_differs() {
+        let doc = cached_doc(1000, 2, 10, dist(&[("rs", 100)]));
+        let current = profile(10, &[("rs", 10)]);
+        assert!(!doc.is_compatible(2000, 2, &current));
+    }
+
+    #[test]
+    fn incompatible_when_format_version_differs() {
+        let mut doc = cached_doc(1000, 2, 10, dist(&[("rs", 100)]));
+        doc.format_version = VOCAB_CACHE_FORMAT_VERSION + 1;
+        let current = profile(10, &[("rs", 10)]);
+        assert!(!doc.is_compatible(1000, 2, &current));
+    }
+}
