@@ -1,6 +1,4 @@
-<p align="center">
-  <img src=".github/assets/logo.png" alt="Debtlint logo" width="360" />
-</p>
+![Debtlint logo](.github/assets/logo.png)
 
 # Debtlint
 
@@ -37,6 +35,36 @@ debtlint --report-format json     # JSON for CI / agents
 ```
 
 On first run, Debtlint trains a BPE vocabulary and writes `.debtlint/debtlint.vocab.json` (and creates `.debtlint/debtlint.config.json` with defaults if missing). Later runs reuse the cache automatically.
+
+## Demo
+
+Try the bundled corpus (three copy-pasted Python helpers):
+
+```bash
+debtlint examples --vocab-size 250
+```
+
+Expected excerpt:
+
+```
+Debtlint report
+───────────────
+  groups:      3
+  occurrences: 9
+  files:       1
+
+#1 3 copies · … tokens · up to … chars
+  duplicated_code.py:4-32
+  duplicated_code.py:32-60
+  duplicated_code.py:60-85
+  preview duplicated_code.py:4-32
+   4 │ def process_user_001(name, age, country, newsletter):
+   5 │     username = name.strip().lower()
+   ...
+```
+
+You should see **3 groups** (user / price / email), each with **3 copies**.  
+`--vocab-size 250` keeps BPE from over-compressing this small file. Details: [examples/README.md](./examples/README.md).
 
 ## When the vocabulary cache refreshes
 
@@ -80,10 +108,10 @@ A legacy `debtlint.config.json` at the repo root is still accepted and migrated 
 
 ## How it works
 
-1. **Ingestion** — walk the tree (Git-independent), respect `.gitignore` and `excludes`. Symlinks are not followed.
-2. **BPE encoding** — train or reuse a vocabulary that surfaces recurring token patterns.
-3. **Winnowing** — fingerprint shingles and extend matches into duplicated blocks.
-4. **Report** — human-readable text by default, or JSON (`--report-format json`).
+1. **Ingestion** walk the tree (Git-independent), respect `.gitignore` and `excludes`. Symlinks are not followed.
+2. **BPE encoding** train or reuse a vocabulary that surfaces recurring token patterns.
+3. **Winnowing** fingerprint shingles and extend matches into duplicated blocks.
+4. **Report** human-readable text by default, or JSON (`--report-format json`).
 
 More detail: [doc/bpe.md](./doc/bpe.md) · [doc/hyperparams.md](./doc/hyperparams.md) · [doc/excludes.md](./doc/excludes.md)
 
@@ -170,36 +198,20 @@ Read the guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 ## Our PoC team ❤️
 
 Developers
-| [<img src="https://github.com/EnzoRuffino.png?size=85" width=85><br><sub>Enzo Ruffino</sub>](https://github.com/EnzoRuffino) | [<img src="https://github.com/skl1017.png?size=85" width=85><br><sub>Loan Riyanto</sub>](https://github.com/skl1017) | [<img src="https://github.com/Rayan-ouer.png?size=85" width=85><br><sub>Rayan</sub>](https://github.com/Rayan-ouer) |
-| :---: | :---: | :---: |
+
+| ![](https://github.com/EnzoRuffino.png?size=85) [Enzo Ruffino](https://github.com/EnzoRuffino) | ![](https://github.com/skl1017.png?size=85) [Loan Riyanto](https://github.com/skl1017) | ![](https://github.com/Rayan-ouer.png?size=85) [Rayan](https://github.com/Rayan-ouer) |
+| :--------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: |
 
 Manager
-| [<img src="https://github.com/lg-epitech.png?size=85" width=85><br><sub>Laurent Gonzalez</sub>](https://github.com/lg-epitech) | [<img src="https://github.com/lhnfe.png?size=85" width=85><br><sub>Lohan</sub>](https://github.com/lhnfe) |
-| :---: | :---: |
 
-<h2 align=center>
-Organization
-</h2>
+| ![](https://github.com/lg-epitech.png?size=85) [Laurent Gonzalez](https://github.com/lg-epitech) | ![](https://github.com/lhnfe.png?size=85) [Lohan](https://github.com/lhnfe) |
+| :----------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------: |
 
-<p align='center'>
-    <a href="https://www.linkedin.com/company/pocinnovation/mycompany/">
-        <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn logo">
-    </a>
-    <a href="https://www.instagram.com/pocinnovation/">
-        <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram logo">
-    </a>
-    <a href="https://twitter.com/PoCInnovation">
-        <img src="https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white" alt="Twitter logo">
-    </a>
-    <a href="https://discord.com/invite/Yqq2ADGDS7">
-        <img src="https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white" alt="Discord logo">
-    </a>
-</p>
-<p align=center>
-    <a href="https://www.poc-innovation.fr/">
-        <img src="https://img.shields.io/badge/WebSite-1a2b6d?style=for-the-badge&logo=GitHub Sponsors&logoColor=white" alt="Website logo">
-    </a>
-</p>
+## Organization
+
+![LinkedIn logo](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white) [](https://www.linkedin.com/company/pocinnovation/mycompany/)![Instagram logo](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)[ ](https://www.linkedin.com/company/pocinnovation/mycompany/)![Twitter logo](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)[ ](https://www.linkedin.com/company/pocinnovation/mycompany/)![Discord logo](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)[
+
+![Website logo](https://img.shields.io/badge/WebSite-1a2b6d?style=for-the-badge&logo=GitHub Sponsors&logoColor=white)
 
 > 🚀 Don't hesitate to follow us on our different networks, and put a star 🌟 on `PoC's` repositories
 
